@@ -1,0 +1,7 @@
+Generic single-database configuration.
+
+
+my own stuff:
+alembic revision --autogenerate -m 'message'
+alembic upgrade head
+does the trick!
