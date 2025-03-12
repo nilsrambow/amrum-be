@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routes import bookings
+from app.api.routes import guest
 
 app = FastAPI()
 
@@ -12,7 +12,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.include_router(bookings.router)
+# app.include_router(bookings.router)
+app.include_router(guest.router)
 
 
 @app.get("/")

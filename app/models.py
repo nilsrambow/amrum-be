@@ -15,7 +15,7 @@ class Booking(Base):
     check_out = Column(DateTime)
     status = Column(String, default="pending")
 
-    user = relationship("Guest", back_populates="bookings")
+    guest = relationship("Guest", back_populates="bookings")
 
 
 class Guest(Base):
