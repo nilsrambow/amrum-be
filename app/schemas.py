@@ -29,15 +29,24 @@ class BookingBase(BaseModel):
     guest_id: int
     check_in: datetime.date
     check_out: datetime.date
-    confirmed: bool = False
-    final_info_sent: bool = False
-    invoice_created: bool = False
-    invoice_sent: bool = False
-    paid: bool = False
 
 
 class BookingUpdate(BookingBase):
-    pass
+    check_in: Optional[datetime.date] = None
+    check_out: Optional[datetime.date] = None
+    confirmed: Optional[bool] = None
+    final_info_sent: Optional[bool] = None
+    invoice_created: Optional[bool] = None
+    invoice_sent: Optional[bool] = None
+    paid: Optional[bool] = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "confirmed": None,
+                "final_info_sent": False,
+            }
+        }
 
 
 class BookingCreate(BookingBase):
