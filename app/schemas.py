@@ -1,7 +1,7 @@
 import datetime
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 class GuestBase(BaseModel):
@@ -32,21 +32,17 @@ class BookingBase(BaseModel):
 
 
 class BookingUpdate(BookingBase):
-    check_in: Optional[datetime.date] = None
-    check_out: Optional[datetime.date] = None
+    guest_id: Optional[None] = Field(None, description="Cannot never updated")
+    check_in: Optional[None] = Field(None, description="Cannot be updated")
+    check_out: Optional[None] = Field(None, description="Cannot be updated")
     confirmed: Optional[bool] = None
-    final_info_sent: Optional[bool] = None
-    invoice_created: Optional[bool] = None
-    invoice_sent: Optional[bool] = None
-    paid: Optional[bool] = None
+    final_info_sent: Optional[None] = Field(None, description="Cannot be updated")
+    invoice_created: Optional[None] = Field(None, description="Cannot be updated")
+    invoice_sent: Optional[None] = Field(None, description="Cannot be updated")
+    paid: Optional[None] = Field(None, description="Cannot be updated")
 
     class Config:
-        json_schema_extra = {
-            "example": {
-                "confirmed": None,
-                "final_info_sent": False,
-            }
-        }
+        extra = "forbid"
 
 
 class BookingCreate(BookingBase):
