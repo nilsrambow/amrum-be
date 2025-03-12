@@ -36,6 +36,10 @@ class BookingBase(BaseModel):
     paid: bool = False
 
 
+class BookingUpdate(BookingBase):
+    pass
+
+
 class BookingCreate(BookingBase):
     class Config:
         json_schema_extra = {
