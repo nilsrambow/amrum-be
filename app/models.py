@@ -1,7 +1,6 @@
+from database import Base
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
-
-from database import Base
 
 
 class Booking(Base):
@@ -13,16 +12,18 @@ class Booking(Base):
     check_out = Column(DateTime)
     status = Column(String, default="pending")
 
-    user = relationship("User", back_populates="bookings")
+    user = relationship("Guest", back_populates="bookings")
 
 
-class User(Base):
-    __tablename__ = "users"
+class Guest(Base):
+    __tablename__ = "guest"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
+    first_name = Column(String, nullable=False)
+    last_name = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False)
+    pays_dayrate = Column(Boolean, default=True)
     hashed_password = Column(String, nullable=False)
     is_admin = Column(Boolean, default=False)
 
-    bookings = relationship("Booking", back_populates="user")
+    bookings = relationship("Booking", back_populates="guest")
