@@ -28,3 +28,7 @@ def create_guest(db: Session, guest_data: GuestCreate):
     db.commit()
     db.refresh(new_guest)
     return new_guest
+
+
+def get_all_guests(db: Session):
+    return db.query(Guest).all()
