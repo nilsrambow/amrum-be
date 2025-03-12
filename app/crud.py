@@ -1,9 +1,7 @@
-from app.models import Booking, Guest
-from app.schemas import BookingCreate, GuestCreate
-
-
 from sqlalchemy.orm import Session
 
+from app.models import Booking, Guest
+from app.schemas import BookingCreate, GuestCreate
 from app.services.guest_service import check_guest_exists, hash_password
 
 
