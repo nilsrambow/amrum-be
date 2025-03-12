@@ -6,8 +6,7 @@ from sqlalchemy.orm import Session
 from app.crud import create_booking
 from app.models import Booking, Guest
 from app.schemas import BookingCreate
-
-# from app.services.booking_service import confirm_booking
+from app.services.booking_service import confirm_booking
 
 
 @pytest.fixture
@@ -37,11 +36,26 @@ def test_booking(db: Session, test_guest: Guest):
     return booking
 
 
-# def test_confirm_booking(db: Session, test_booking: Booking):
-#     assert test_booking.confirmed is False
-#     confirmed_booking = confirm_booking(db, test_booking.id)
-#     assert confirmed_booking.confirmed is True
-#
+def test_confirm_booking(db: Session, test_booking: Booking):
+    assert test_booking.confirmed is False
+    confirmed_booking = confirm_booking(db, test_booking.id)
+    assert confirmed_booking.confirmed is True
+
+
+def test_confirm_non_existing_booking(db: Session):
+    try:
+        confirm_booking(db, 999)
+    except Exception as e:
+        assert isinstance(e, ValueError)
+
+
+def test_confirm_already_confirmed_booking(db: Session, test_booking: Booking):
+    confirm_booking(db, test_booking.id)
+
+    try:
+        confirm_booking(db, test_booking.id)
+    except Exception as e:
+        assert isinstance(e, ValueError)
 
 
 def test_booking_guest_must_exist(db: Session, test_booking: Booking):

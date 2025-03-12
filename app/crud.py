@@ -44,3 +44,14 @@ def create_guest(db: Session, guest_data: GuestCreate):
     db.commit()
     db.refresh(new_guest)
     return new_guest
+
+
+def update_booking(db: Session, booking_id: int, update_fields: dict):
+    booking = db.query(Booking).filter(Booking.id == booking_id).first()
+    if not booking:
+        return None
+    for key, value in update_fields.items():
+        setattr(booking, key, value)
+    db.commit()
+    db.refresh(booking)
+    return booking
