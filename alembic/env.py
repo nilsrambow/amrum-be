@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
-from database import Base
-from models import Booking, User  # noqa
+from app.database import Base
+from app.models import Booking, Guest  # noqa
 
 ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
 if ENVIRONMENT == "production":
