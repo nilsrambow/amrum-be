@@ -27,6 +27,7 @@ def list_bookings(db: Session = Depends(get_db)):
 def update_booking(
     booking_id: int, update_data: BookingUpdate, db: Session = Depends(get_db)
 ):
+    # TODO: improve below. The check needs to be if ocnfirmed==True and either to not return or make sure that only one parameter is patched
     if update_data.confirmed is not None:
         try:
             return confirm_booking(db, booking_id)
