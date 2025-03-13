@@ -10,11 +10,6 @@ def create_booking(db: Session, booking_data: BookingCreate):
         guest_id=booking_data.guest_id,
         check_in=booking_data.check_in,
         check_out=booking_data.check_out,
-        confirmed=booking_data.confirmed,
-        final_info_sent=booking_data.final_info_sent,
-        invoice_created=booking_data.invoice_created,
-        invoice_sent=booking_data.invoice_sent,
-        paid=booking_data.paid,
     )
 
     db.add(new_booking)
@@ -44,3 +39,11 @@ def create_guest(db: Session, guest_data: GuestCreate):
     db.commit()
     db.refresh(new_guest)
     return new_guest
+
+
+def update_object(db: Session, object, update_fields: dict):
+    for key, value in update_fields.items():
+        setattr(object, key, value)
+    db.commit()
+    db.refresh(object)
+    return object
