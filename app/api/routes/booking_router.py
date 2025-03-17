@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.booking_repository import BookingRepository
 from app.database import get_db
+from app.guest_repository import GuestRepository
 from app.schemas import BookingCreate, BookingResponse
 from app.services.booking_service import BookingService
 
@@ -13,10 +14,15 @@ def get_booking_repository(db: Session = Depends(get_db)):
     return BookingRepository(db)
 
 
+def get_guest_repository(db: Session = Depends(get_db)):
+    return GuestRepository(db)
+
+
 def get_booking_service(
     repository: BookingRepository = Depends(get_booking_repository),
+    guest_repository: GuestRepository = Depends(get_guest_repository),
 ):
-    return BookingService(repository)
+    return BookingService(repository, guest_repository)
 
 
 @router.post("/bookings", response_model=BookingResponse)
@@ -45,8 +51,8 @@ def confirm_booking(
 ):
     try:
         return booking_service.confirm_booking(booking_id)
-    except ValueError as e:
-        raise HTTPException(status_code=404, details=str(e))
+    except ValueError:
+        raise HTTPException(status_code=404)
 
 
 # @router.patch("/bookings/{booking_id}", response_model=BookingResponse)

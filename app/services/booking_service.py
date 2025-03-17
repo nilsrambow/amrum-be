@@ -9,7 +9,7 @@ class BookingService:
     def __init__(
         self, booking_repository: BookingRepository, guest_repository: GuestRepository
     ):
-        self.booking_repository = (booking_repository,)
+        self.booking_repository = booking_repository
         self.guest_repository = guest_repository
 
     def create_booking(self, booking_data: BookingCreate):
@@ -35,9 +35,7 @@ class BookingService:
         return self.booking_repository.update(booking)
 
     def confirm_booking(self, booking_id: int):
-        booking = self.get_booking_by_id(booking_id)
         # TODO send notification
         booking_update = BookingUpdate(confirmed=True)
         updated_booking = self.update_booking(booking_id, booking_update)
-        booking = self.update_booking(booking_id, booking.confirmed)
         return updated_booking
