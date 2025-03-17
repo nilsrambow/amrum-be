@@ -39,6 +39,16 @@ def list_bookings(booking_service: BookingService = Depends(get_booking_service)
         raise HTTPException(status_code=400, details=str(e))
 
 
+@router.patch("/booking/{booking_id}/confirm", response_model=BookingResponse)
+def confirm_booking(
+    booking_id: int, booking_service: BookingService = Depends(get_booking_service)
+):
+    try:
+        return booking_service.confirm_booking(booking_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, details=str(e))
+
+
 # @router.patch("/bookings/{booking_id}", response_model=BookingResponse)
 # def update_booking(
 #     booking_id: int, update_data: BookingUpdate, db: Session = Depends(get_db)

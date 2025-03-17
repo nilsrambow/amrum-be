@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from app.booking_repository import BookingRepository
+from app.guest_repository import GuestRepository
 from app.schemas import BookingCreate, BookingUpdate
 
 
@@ -26,12 +27,17 @@ class BookingService:
             raise ValueError(f"Booking with ID {booking_id} not found ")
         return booking
 
-    def confirm_booking(self, booking_id: int, booking_data: BookingUpdate):
+    def update_booking(self, booking_id: int, booking_data: BookingUpdate):
         booking = self.get_booking_by_id(booking_id)
         for field, value in booking_data.dict(exclude_unset=True).items():
             setattr(booking, field, value)
-        # TODO: send notification
         booking.modified_at = datetime.utcnow()
         return self.booking_repository.update(booking)
 
-        return None
+    def confirm_booking(self, booking_id: int):
+        booking = self.get_booking_by_id(booking_id)
+        # TODO send notification
+        booking_update = BookingUpdate(confirmed=True)
+        updated_booking = self.update_booking(booking_id, booking_update)
+        booking = self.update_booking(booking_id, booking.confirmed)
+        return updated_booking
