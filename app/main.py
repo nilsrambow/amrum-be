@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import booking, guest
+from app.api.routes import booking_router, guest_router
 
 app = FastAPI()
 
@@ -12,10 +12,5 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.include_router(booking.router)
-app.include_router(guest.router)
-
-
-@app.get("/")
-def read_root():
-    return {"mesage": "Welcome to Amrum Manager!"}
+app.include_router(booking_router.router)
+app.include_router(guest_router.router)

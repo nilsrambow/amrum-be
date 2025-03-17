@@ -1,34 +1,41 @@
-from sqlalchemy.orm import Session
+from datetime import datetime
 
-from app.crud import create_booking as crud_create_booking
-from app.crud import update_object as crud_update_object
-from app.models import Booking, Guest
-from app.schemas import BookingCreate
-
-
-def create_booking(db: Session, booking_data: BookingCreate):
-    """Handles business logic before creating a booking."""
-
-    guest = db.query(Guest).filter(Guest.id == booking_data.guest_id).first()
-    if not guest:
-        raise ValueError("Guest does not exist")
-
-    if booking_data.check_out < booking_data.check_in:
-        raise ValueError("Check-out date must be after check-in date")
-
-    return crud_create_booking(db, booking_data)
+from app.booking_repository import BookingRepository
+from app.guest_repository import GuestRepository
+from app.schemas import BookingCreate, BookingUpdate
 
 
-def confirm_booking(db: Session, booking_id: int):
-    booking = db.query(Booking).filter(Booking.id == booking_id).first()
-    if not booking:
-        raise ValueError("Booking not found")
+class BookingService:
+    def __init__(
+        self, booking_repository: BookingRepository, guest_repository: GuestRepository
+    ):
+        self.booking_repository = booking_repository
+        self.guest_repository = guest_repository
 
-    if booking.confirmed:
-        raise ValueError("Booking is already confirmed")
+    def create_booking(self, booking_data: BookingCreate):
+        # TODO: Check if guest exists
+        # TODO: validate booking dates
+        booking_dict = booking_data.dict()
+        return self.booking_repository.create(booking_dict)
 
-    # TODO: send notification
+    def get_all_bookings(self):
+        return self.booking_repository.get_all()
 
-    crud_update_object(db, booking, {"confirmed": True})
+    def get_booking_by_id(self, booking_id: int):
+        booking = self.booking_repository.get_by_id(booking_id)
+        if not booking:
+            raise ValueError(f"Booking with ID {booking_id} not found ")
+        return booking
 
-    return booking
+    def update_booking(self, booking_id: int, booking_data: BookingUpdate):
+        booking = self.get_booking_by_id(booking_id)
+        for field, value in booking_data.dict(exclude_unset=True).items():
+            setattr(booking, field, value)
+        booking.modified_at = datetime.utcnow()
+        return self.booking_repository.update(booking)
+
+    def confirm_booking(self, booking_id: int):
+        # TODO send notification
+        booking_update = BookingUpdate(confirmed=True)
+        updated_booking = self.update_booking(booking_id, booking_update)
+        return updated_booking
