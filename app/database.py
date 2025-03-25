@@ -1,20 +1,10 @@
-import os
-
-from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
+from app.config.config import get_database_url
 
-if ENVIRONMENT == "production":
-    load_dotenv(".env.production")
-else:
-    load_dotenv(".env.local")
-
-
-DATABASE_URL = os.getenv("DATABASE_URL")
-
+DATABASE_URL = get_database_url()
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)

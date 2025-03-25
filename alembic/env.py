@@ -1,20 +1,13 @@
-import os
 from logging.config import fileConfig
 
-from dotenv import load_dotenv
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
+from app.config.config import get_database_url
 from app.database import Base
 from app.models import Booking, Guest  # noqa
 
-ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
-if ENVIRONMENT == "production":
-    load_dotenv(".env.production")
-else:
-    load_dotenv(".env.local")
-
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = get_database_url()
 
 
 # this is the Alembic Config object, which provides

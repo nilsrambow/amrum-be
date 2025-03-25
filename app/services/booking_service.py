@@ -40,7 +40,6 @@ class BookingService:
         return self.booking_repository.update(booking)
 
     def confirm_booking(self, booking_id: int):
-        # TODO send notification
         booking_update = BookingUpdate(confirmed=True)
         updated_booking = self.update_booking(booking_id, booking_update)
         guest = self.guest_repository.get_by_id(guest_id=updated_booking.guest_id)
@@ -63,4 +62,3 @@ class BookingService:
             template_name="bkg_confirmation_template",
             context=context,
         )
-        pass

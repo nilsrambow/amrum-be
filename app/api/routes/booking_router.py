@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.booking_repository import BookingRepository
+from app.config.config import get_email_config
 from app.database import get_db
 from app.guest_repository import GuestRepository
 from app.schemas import BookingCreate, BookingResponse
@@ -19,16 +20,6 @@ def get_guest_repository(db: Session = Depends(get_db)):
     return GuestRepository(db)
 
 
-def get_email_config():
-    return {
-        "sender": "bookings@yourhouse.com",
-        "smtp_server": "smtp.yourprovider.com",
-        "smtp_port": 587,
-        "username": "your_username",
-        "password": "your_password",
-    }
-
-
 def get_communication_service(email_config=Depends(get_email_config)):
     return CommunicationService(email_config)
 
@@ -39,14 +30,6 @@ def get_booking_service(
     communication_service=Depends(get_communication_service),
 ):
     return BookingService(booking_repository, guest_repository, communication_service)
-
-
-# def get_booking_service(
-#     repository: BookingRepository = Depends(get_booking_repository),
-#     guest_repository: GuestRepository = Depends(get_guest_repository),
-# ):
-#     return BookingService(repository, guest_repository)
-#
 
 
 @router.post("/bookings", response_model=BookingResponse)
