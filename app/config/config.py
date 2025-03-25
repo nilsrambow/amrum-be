@@ -1,8 +1,13 @@
 import os
 
-from dotenv import load_dotenv
+from dotenv import find_dotenv, load_dotenv
 
-load_dotenv()
+# Find the correct .env file based on the current environment
+env = os.getenv("ENV", "development")
+env_file = find_dotenv(f".env.{env}")
+print(env_file)
+
+load_dotenv(env_file)
 
 
 def get_email_config():
