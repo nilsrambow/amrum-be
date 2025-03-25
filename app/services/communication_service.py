@@ -4,6 +4,8 @@ from email.mime.text import MIMEText
 
 from jinja2 import Environment, FileSystemLoader
 
+from app.config.config import env
+
 
 class CommunicationService:
     def __init__(self, email_config, templates_dir="templates"):
@@ -26,6 +28,17 @@ class CommunicationService:
 
         # Attach HTML content
         message.attach(MIMEText(html_content, "html"))
+
+        # print instead of send_message
+        if env == "development":
+            print("\n----- DEV MODE: EMAIL NOT ACTUALLY SENT -----")
+            print(f"From: {message['From']}")
+            print(f"To: {message['To']}")
+            print(f"Subject: {message['Subject']}")
+            # print(f"\nBody:\n{html_content}")
+            print("-----------------------------------------\n")
+
+            return True
 
         # Send email
         with smtplib.SMTP(
