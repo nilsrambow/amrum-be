@@ -1,5 +1,3 @@
-# guest_service.py
-
 from passlib.context import CryptContext
 
 from app.guest_repository import GuestRepository
