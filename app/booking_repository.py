@@ -37,13 +37,11 @@ class BookingRepository:
         self.db.commit()
 
     def get_by_guest_id(self, guest_id) -> list[Booking]:
-        return self.db.query(Booking.guest_id == guest_id).all()
+        return self.db.query(Booking).filter(Booking.guest_id == guest_id).all()
 
     def get_by_date_range(self, start_date: date, end_date: date) -> list[Booking]:
         return (
             self.db.query(Booking)
-            .filter(
-                Booking.check_in_date <= end_date, Booking.check_out_date >= start_date
-            )
+            .filter(Booking.check_in <= end_date, Booking.check_out >= start_date)
             .all()
         )
