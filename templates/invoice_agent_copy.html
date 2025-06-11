@@ -1,0 +1,32 @@
+{% extends "base_email.html" %}
+
+{% block content %}
+<p>Invoice has been sent to guest for booking:</p>
+
+<div class="booking-details">
+    <h3>Booking Details:</h3>
+    <ul>
+        <li><strong>Guest:</strong> {{ guest_name }} ({{ guest_email }})</li>
+        <li><strong>Check-in:</strong> {{ check_in_date }}</li>
+        <li><strong>Check-out:</strong> {{ check_out_date }}</li>
+        <li><strong>Booking ID:</strong> {{ booking_id }}</li>
+    </ul>
+</div>
+
+<div class="invoice-section">
+    <h3>Invoice Information:</h3>
+    <ul>
+        <li><strong>Invoice Number:</strong> {{ invoice_number }}</li>
+        <li><strong>Total Amount:</strong> €{{ total_amount }}</li>
+        <li><strong>Status:</strong> Sent to guest</li>
+    </ul>
+</div>
+
+<p>The invoice has been automatically generated and sent to the guest.</p>
+
+<p>This is an automated notification.</p>
+{% endblock %}
+
+{% block footer %}
+<p>This is an automated notification.</p>
+{% endblock %} 

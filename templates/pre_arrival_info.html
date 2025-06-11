@@ -1,0 +1,30 @@
+{% extends "base_email.html" %}
+
+{% block content %}
+<p>Hello {{ guest_name }},</p>
+
+<p>Your stay is approaching! Here's the latest information for your visit from {{ check_in_date }} to {{ check_out_date }}.</p>
+
+<div class="info-section">
+    <h3>Important Information:</h3>
+    <ul>
+        <li>Check-in: {{ check_in_date }}</li>
+        <li>Check-out: {{ check_out_date }}</li>
+        {% if kurtaxe_amount %}
+        <li>Tourist Tax (Kurtaxe): €{{ kurtaxe_amount }}</li>
+        {% endif %}
+    </ul>
+</div>
+
+{% if kurkarten_url %}
+<div class="info-section">
+    <h3>Kurkarten Information:</h3>
+    <p>Please complete your tourist card information if you haven't already:</p>
+    <p><a href="{{ kurkarten_url }}" style="color: #4CAF50;">Complete Kurkarten Form</a></p>
+</div>
+{% endif %}
+
+<p>We look forward to welcoming you!</p>
+
+<p>If you have any questions, please don't hesitate to contact us.</p>
+{% endblock %} 

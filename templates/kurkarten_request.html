@@ -1,0 +1,17 @@
+{% extends "base_email.html" %}
+
+{% block content %}
+<p>Hello {{ guest_name }},</p>
+
+<p>We hope you are looking forward to your upcoming stay from {{ check_in_date }} to {{ check_out_date }}.</p>
+
+<div class="highlight">
+    <p><strong>Kurkarten (Tourist Card) Information Required</strong></p>
+    <p>Please provide your tourist card information using the link below:</p>
+    <p><a href="{{ kurkarten_url }}" class="button">Provide Kurkarten Information</a></p>
+</div>
+
+<p>This information is required for your stay and helps us process your tourist tax.</p>
+
+<p>If you have any questions, please don't hesitate to contact us.</p>
+{% endblock %} 

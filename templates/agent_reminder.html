@@ -1,0 +1,39 @@
+{% extends "base_email.html" %}
+
+{% block header_class %}warning{% endblock %}
+
+{% block content %}
+<div class="alert">
+    <p><strong>Action Required:</strong> {{ reminder_reason }}</p>
+</div>
+
+<div class="booking-details">
+    <h3>Booking Details:</h3>
+    <ul>
+        <li><strong>Guest:</strong> {{ guest_name }}</li>
+        <li><strong>Email:</strong> {{ guest_email }}</li>
+        <li><strong>Check-in:</strong> {{ check_in_date }}</li>
+        <li><strong>Check-out:</strong> {{ check_out_date }}</li>
+        <li><strong>Booking ID:</strong> {{ booking_id }}</li>
+    </ul>
+</div>
+
+{% if missing_items %}
+<div class="alert">
+    <h4>Missing Information:</h4>
+    <ul>
+        {% for item in missing_items %}
+        <li>{{ item }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<p>Please take the necessary action in the booking system.</p>
+
+<p>This is an automated reminder.</p>
+{% endblock %}
+
+{% block footer %}
+<p>This is an automated notification.</p>
+{% endblock %} 
