@@ -1,10 +1,11 @@
-import uvicorn
 import asyncio
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from app.api.routes import booking_router, guest_router, admin_router
+import uvicorn
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.api.routes import admin_router, booking_router, guest_router
 from app.services.scheduler_service import scheduler_service
 
 
@@ -13,9 +14,9 @@ async def lifespan(app: FastAPI):
     # Startup
     print("Starting scheduler service...")
     scheduler_task = asyncio.create_task(scheduler_service.start_scheduler())
-    
+
     yield
-    
+
     # Shutdown
     print("Stopping scheduler service...")
     scheduler_service.stop_scheduler()
@@ -41,5 +42,4 @@ app.include_router(admin_router.router)
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8888, reload=True)
-
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
