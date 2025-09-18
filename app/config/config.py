@@ -21,4 +21,4 @@ def get_email_config():
 
 
 def get_database_url():
-    return os.getenv("DATABASE_URL")
+    return os.getenv("DATABASE_URL", "sqlite:///memory:")
