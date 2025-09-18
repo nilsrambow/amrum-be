@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Expose port
-EXPOSE 8123
+EXPOSE 8000
 
 # Set environment variables (optional, for unbuffered output)
 ENV PYTHONUNBUFFERED=1

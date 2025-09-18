@@ -1,0 +1,10 @@
+version: "3.9"
+services:
+  amrum-be:
+    build: .
+    container_name: amrum-be
+    ports:
+      - "8123:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
