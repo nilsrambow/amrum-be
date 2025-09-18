@@ -1,34 +1,106 @@
 {% extends "base_email.html" %}
 
-{% block header_class %}info{% endblock %}
-
 {% block content %}
-<p>Hello {{ guest_name }},</p>
+<div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #2c3e50; margin-bottom: 10px;">INVOICE</h1>
+        <p style="color: #7f8c8d; font-size: 18px;">{{ invoice_id }}</p>
+    </div>
 
-<p>Thank you for your recent stay from {{ check_in_date }} to {{ check_out_date }}.</p>
+    <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+        <h2 style="color: #2c3e50; margin-top: 0;">Guest Information</h2>
+        <p><strong>Name:</strong> {{ guest_name }}</p>
+        <p><strong>Check-in:</strong> {{ check_in_date }}</p>
+        <p><strong>Check-out:</strong> {{ check_out_date }}</p>
+        <p><strong>Duration:</strong> {{ num_days }} days</p>
+    </div>
 
-<p>Please find your invoice attached to this email.</p>
+    <div style="margin-bottom: 30px;">
+        <h2 style="color: #2c3e50;">Invoice Details</h2>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+            <thead>
+                <tr style="background-color: #ecf0f1;">
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #bdc3c7;">Item</th>
+                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid #bdc3c7;">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if accommodation_cost != "€0.00" %}
+                <tr>
+                    <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">Accommodation ({{ num_days }} nights)</td>
+                    <td style="padding: 12px; text-align: right; border-bottom: 1px solid #ecf0f1;">{{ accommodation_cost }}</td>
+                </tr>
+                {% endif %}
+                
+                {% if electricity_cost != "€0.00" %}
+                <tr>
+                    <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">
+                        Electricity 
+                        {% if consumption and consumption.electricity_kwh %}
+                        ({{ "%.1f"|format(consumption.electricity_kwh) }} kWh)
+                        {% endif %}
+                    </td>
+                    <td style="padding: 12px; text-align: right; border-bottom: 1px solid #ecf0f1;">{{ electricity_cost }}</td>
+                </tr>
+                {% endif %}
+                
+                {% if gas_cost != "€0.00" %}
+                <tr>
+                    <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">
+                        Gas
+                        {% if consumption and consumption.gas_kwh %}
+                        ({{ "%.1f"|format(consumption.gas_kwh) }} kWh)
+                        {% endif %}
+                    </td>
+                    <td style="padding: 12px; text-align: right; border-bottom: 1px solid #ecf0f1;">{{ gas_cost }}</td>
+                </tr>
+                {% endif %}
+                
+                {% if firewood_cost != "€0.00" %}
+                <tr>
+                    <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">
+                        Firewood
+                        {% if consumption and consumption.firewood_boxes %}
+                        ({{ consumption.firewood_boxes }} boxes)
+                        {% endif %}
+                    </td>
+                    <td style="padding: 12px; text-align: right; border-bottom: 1px solid #ecf0f1;">{{ firewood_cost }}</td>
+                </tr>
+                {% endif %}
+                
+                {% if kurtaxe_cost != "€0.00" %}
+                <tr>
+                    <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">Tourist Tax (Kurtaxe)</td>
+                    <td style="padding: 12px; text-align: right; border-bottom: 1px solid #ecf0f1;">{{ kurtaxe_cost }}</td>
+                </tr>
+                {% endif %}
+            </tbody>
+            <tfoot>
+                <tr style="background-color: #2c3e50; color: white; font-weight: bold;">
+                    <td style="padding: 15px; font-size: 18px;">TOTAL</td>
+                    <td style="padding: 15px; text-align: right; font-size: 18px;">{{ total_cost }}</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
 
-<div class="invoice-section">
-    <h3>Invoice Summary:</h3>
-    <ul>
-        <li><strong>Invoice Number:</strong> {{ invoice_number }}</li>
-        <li><strong>Total Amount:</strong> €{{ total_amount }}</li>
-        <li><strong>Due Date:</strong> {{ due_date }}</li>
-    </ul>
+    <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; border-left: 4px solid #27ae60;">
+        <h3 style="color: #27ae60; margin-top: 0;">Payment Information</h3>
+        <p style="margin-bottom: 10px;"><strong>Total Amount Due:</strong> {{ total_cost }}</p>
+        <p style="margin-bottom: 10px;"><strong>Invoice ID:</strong> {{ invoice_id }}</p>
+        <p style="margin-bottom: 0;">Please include the invoice ID when making your payment.</p>
+    </div>
+
+    <div style="margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 8px;">
+        <h3 style="color: #2c3e50; margin-top: 0;">Contact Information</h3>
+        <p style="margin-bottom: 5px;">If you have any questions about this invoice, please contact us:</p>
+        <p style="margin-bottom: 5px;"><strong>Email:</strong> booking-agent@example.com</p>
+        <p style="margin-bottom: 0;"><strong>Phone:</strong> +49 XXX XXX XXX</p>
 </div>
 
-<div class="info-section">
-    <h3>Payment Instructions:</h3>
-    <p>Please transfer the amount to the following account:</p>
-    <ul>
-        <li>Account holder: Your Company Name</li>
-        <li>IBAN: DE12 3456 7890 1234 5678 90</li>
-        <li>Reference: {{ invoice_number }}</li>
-    </ul>
+    <div style="margin-top: 30px; text-align: center; color: #7f8c8d; font-size: 14px;">
+        <p>Thank you for choosing our accommodation!</p>
+        <p>This is an automated invoice. Please do not reply to this email.</p>
+    </div>
 </div>
-
-<p>Please use the invoice number as payment reference.</p>
-
-<p>Thank you for choosing us. We hope you enjoyed your stay!</p>
 {% endblock %} 

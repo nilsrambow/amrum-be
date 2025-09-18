@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.guest_repository import GuestRepository
-from app.schemas import GuestCreate, GuestResponse
+from app.schemas import GuestCreate, GuestResponse, GuestUpdate
 from app.services.guest_service import GuestService
 
 router = APIRouter()
@@ -36,11 +36,25 @@ def list_guests(guest_service: GuestService = Depends(get_guest_service)):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/guest_by_id/{guest_id}", response_model=GuestResponse)
+@router.get("/guest/{guest_id}", response_model=GuestResponse)
 def get_guest_by_id(
     guest_id: int, guest_service: GuestService = Depends(get_guest_service)
 ):
+    """Get a specific guest by ID."""
     try:
         return guest_service.get_guest_by_id(guest_id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.patch("/guest/{guest_id}", response_model=GuestResponse)
+def update_guest(
+    guest_id: int,
+    guest_update: GuestUpdate,
+    guest_service: GuestService = Depends(get_guest_service)
+):
+    """Update a guest by ID."""
+    try:
+        return guest_service.update_guest(guest_id, guest_update)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

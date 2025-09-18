@@ -4,7 +4,7 @@ from enum import Enum
 
 from pydantic import BaseModel, EmailStr, Field
 
-from app.models import PriceType
+from app.models import PriceType, BookingStatus
 
 
 class GuestBase(BaseModel):
@@ -26,6 +26,18 @@ class GuestResponse(GuestBase):
 
     class Config:
         from_attribute = True
+
+
+class GuestUpdate(BaseModel):
+    """Schema for partial guest updates - excludes system-managed fields"""
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    pays_dayrate: Optional[bool] = None
+    is_admin: Optional[bool] = None
+
+    class Config:
+        extra = "forbid"
 
 
 # Meter Reading Schemas
@@ -170,6 +182,18 @@ class BookingUpdate(BaseModel):
         extra = "forbid"
 
 
+class BookingPartialUpdate(BaseModel):
+    """Schema for partial booking updates - excludes system-managed fields"""
+    guest_id: Optional[int] = None
+    check_in: Optional[datetime.date] = None
+    check_out: Optional[datetime.date] = None
+    kurtaxe_amount: Optional[float] = None
+    kurtaxe_notes: Optional[str] = None
+
+    class Config:
+        extra = "forbid"
+
+
 class KurtaxeUpdate(BaseModel):
     kurtaxe_amount: Optional[float] = None
     kurtaxe_notes: Optional[str] = None
@@ -197,6 +221,9 @@ class BookingResponse(BookingBase):
     invoice_sent: bool = False
     paid: bool = False
     
+    # Booking status
+    status: BookingStatus = BookingStatus.NEW
+    
     # New fields
     kurkarten_email_sent: bool = False
     kurkarten_email_sent_date: Optional[datetime.datetime] = None
@@ -213,6 +240,52 @@ class BookingResponse(BookingBase):
     # Relationships
     meter_readings: Optional[MeterReadingResponse] = None
     payments: Optional[List[PaymentResponse]] = None
+    
+    # Invoice details (calculated)
+    invoice_details: Optional[dict] = None
+    
+    # Token information
+    access_token: Optional[str] = None
+    token_expires_at: Optional[datetime.datetime] = None
+
+    class Config:
+        from_attribute = True
+
+
+# Token Schemas
+class BookingTokenResponse(BaseModel):
+    token: str
+    expires_at: datetime.datetime
+    created_at: datetime.datetime
+    last_used_at: Optional[datetime.datetime] = None
+
+    class Config:
+        from_attribute = True
+
+
+class GuestBookingResponse(BaseModel):
+    """Response for guest access via magic link - limited booking info"""
+    id: int
+    check_in: datetime.date
+    check_out: datetime.date
+    confirmed: bool
+    status: BookingStatus
+    kurtaxe_amount: Optional[float] = None
+    kurtaxe_notes: Optional[str] = None
+    created_at: datetime.datetime
+    
+    # Guest info (limited)
+    guest_name: str
+    guest_email: str
+    
+    # Meter readings (if any)
+    meter_readings: Optional[MeterReadingResponse] = None
+    
+    # Payments (if any)
+    payments: Optional[List[PaymentResponse]] = None
+    
+    # Invoice details (calculated)
+    invoice_details: Optional[dict] = None
 
     class Config:
         from_attribute = True

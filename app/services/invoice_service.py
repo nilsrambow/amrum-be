@@ -1,11 +1,12 @@
 import datetime
 import uuid
-from typing import Optional
+from typing import Optional, List
 from sqlalchemy.orm import Session
 
 from app.models import Booking, UnitPrice, MeterReading, PriceType
 from app.services.communication_service import CommunicationService
 from app.services.meter_service import MeterService
+from app.services.booking_status_service import BookingStatusService
 
 
 class InvoiceService:
@@ -14,6 +15,22 @@ class InvoiceService:
         self.communication_service = communication_service
         self.meter_service = meter_service
         self.agent_email = "booking-agent@example.com"  # Configure this
+    
+    @classmethod
+    def get_invoice_delay_days(cls) -> int:
+        """Get the number of days after departure to generate invoices."""
+        return 3
+    
+    @classmethod
+    def get_pending_invoice_bookings(cls, db: Session) -> List[Booking]:
+        """Get all bookings that need invoice generation."""
+        cutoff_date = datetime.date.today() - datetime.timedelta(days=cls.get_invoice_delay_days())
+        
+        return db.query(Booking).filter(
+            Booking.confirmed == True,
+            Booking.check_out <= cutoff_date,
+            Booking.invoice_created == False
+        ).all()
     
     def generate_invoice_for_booking(self, booking_id: int) -> Optional[str]:
         """Generate invoice for a booking if all requirements are met."""
@@ -35,18 +52,63 @@ class InvoiceService:
         # Generate PDF (placeholder for now)
         pdf_path = self._generate_invoice_pdf(booking, invoice_data, invoice_id)
         
-        # Send invoice email
-        if self._send_invoice_email(booking, invoice_id, pdf_path):
-            # Update booking
+        # Update booking with invoice information
+        booking.invoice_id = invoice_id
+        booking.invoice_created = True
+        booking.invoice_sent = False  # Not sent yet
+        booking.invoice_sent_date = None
+        self.db.commit()
+        
+        return invoice_id
+
+    def generate_invoice_data(self, booking_id: int) -> Optional[dict]:
+        """Generate invoice data for a booking without sending email."""
+        booking = self.db.query(Booking).filter(Booking.id == booking_id).first()
+        if not booking:
+            raise ValueError(f"Booking with ID {booking_id} not found")
+        
+        # Check if readings are complete
+        if not self.meter_service.are_readings_complete(booking_id):
+            raise ValueError("Meter readings are incomplete - cannot generate invoice")
+        
+        # Calculate invoice amounts
+        invoice_data = self._calculate_invoice_amounts(booking)
+        
+        # Generate invoice ID if not exists
+        if not booking.invoice_id:
+            invoice_id = f"INV-{booking.id}-{datetime.datetime.utcnow().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8]}"
             booking.invoice_id = invoice_id
             booking.invoice_created = True
-            booking.invoice_sent = True
-            booking.invoice_sent_date = datetime.datetime.utcnow()
+            booking.invoice_sent = False
+            booking.invoice_sent_date = None
             self.db.commit()
             
-            return invoice_id
+            # Update booking status when invoice is created
+            status_service = BookingStatusService(self.db)
+            status_service.update_status_on_invoice_created(booking)
+        else:
+            invoice_id = booking.invoice_id
         
-        return None
+        # Return invoice data
+        return {
+            'invoice_id': invoice_id,
+            'booking_id': booking_id,
+            'guest_name': f"{booking.guest.first_name} {booking.guest.last_name}",
+            'check_in': booking.check_in.strftime("%Y-%m-%d"),
+            'check_out': booking.check_out.strftime("%Y-%m-%d"),
+            'num_days': invoice_data['num_days'],
+            'accommodation_cost': invoice_data['accommodation_cost'],
+            'stay_rate': invoice_data['stay_rate'],
+            'electricity_cost': invoice_data['electricity_cost'],
+            'elec_rate': invoice_data['elec_rate'],
+            'gas_cost': invoice_data['gas_cost'],
+            'gas_rate': invoice_data['gas_rate'],
+            'firewood_cost': invoice_data['firewood_cost'],
+            'firewood_rate': invoice_data['firewood_rate'],
+            'kurtaxe_cost': invoice_data['kurtaxe_cost'],
+            'total_cost': invoice_data['total_cost'],
+            'consumption': invoice_data['consumption']
+        }
     
     def _calculate_invoice_amounts(self, booking: Booking) -> dict:
         """Calculate all amounts for the invoice."""
@@ -58,7 +120,8 @@ class InvoiceService:
         # Calculate accommodation costs
         num_days = (booking.check_out - booking.check_in).days
         stay_rate = self._get_unit_price(PriceType.STAY_PER_NIGHT, current_date)
-        accommodation_cost = num_days * stay_rate if stay_rate else 0
+        # Only charge accommodation if guest pays per night
+        accommodation_cost = num_days * stay_rate if (stay_rate and booking.guest.pays_dayrate) else 0
         
         # Calculate utility costs
         electricity_cost = 0
@@ -70,8 +133,14 @@ class InvoiceService:
             electricity_cost = consumption['electricity_kwh'] * elec_rate if elec_rate else 0
         
         if 'gas_kwh' in consumption:
+            # Gas calculation: gas_kwh * price per kWh
+            # Note: gas_kwh is already converted from cubic meters in meter service
             gas_rate = self._get_unit_price(PriceType.GAS_PER_CUBIC_METER, current_date)
-            gas_cost = consumption['gas_kwh'] * gas_rate if gas_rate else 0
+            # Since we're now using kWh, we need to convert the price from per cubic meter to per kWh
+            # 1 cubic meter = 10.5 kWh, so price per kWh = price per cubic meter / 10.5
+            gas_conversion_factor = 10.5
+            gas_price_per_kwh = gas_rate / gas_conversion_factor if gas_rate else 0
+            gas_cost = consumption['gas_kwh'] * gas_price_per_kwh
         
         if 'firewood_boxes' in consumption:
             firewood_rate = self._get_unit_price(PriceType.FIREWOOD_PER_BOX, current_date)
@@ -82,9 +151,13 @@ class InvoiceService:
         
         return {
             'accommodation_cost': accommodation_cost,
+            'stay_rate': stay_rate,
             'electricity_cost': electricity_cost,
+            'elec_rate': elec_rate,
             'gas_cost': gas_cost,
+            'gas_rate': gas_rate,
             'firewood_cost': firewood_cost,
+            'firewood_rate': firewood_rate,
             'kurtaxe_cost': kurtaxe_cost,
             'total_cost': accommodation_cost + electricity_cost + gas_cost + firewood_cost + kurtaxe_cost,
             'consumption': consumption,
@@ -123,28 +196,44 @@ class InvoiceService:
         """Send invoice email to guest with agent in CC."""
         guest = booking.guest
         
+        # Calculate invoice amounts for the email context
+        invoice_data = self._calculate_invoice_amounts(booking)
+        
+        # Format currency values
+        def format_currency(amount):
+            return f"€{amount:.2f}" if amount else "€0.00"
+        
         context = {
             "guest_name": f"{guest.first_name} {guest.last_name}",
             "check_in_date": booking.check_in.strftime("%B %d, %Y"),
             "check_out_date": booking.check_out.strftime("%B %d, %Y"),
             "invoice_id": invoice_id,
+            "num_days": invoice_data['num_days'],
+            "accommodation_cost": format_currency(invoice_data['accommodation_cost']),
+            "electricity_cost": format_currency(invoice_data['electricity_cost']),
+            "gas_cost": format_currency(invoice_data['gas_cost']),
+            "firewood_cost": format_currency(invoice_data['firewood_cost']),
+            "kurtaxe_cost": format_currency(invoice_data['kurtaxe_cost']),
+            "total_cost": format_currency(invoice_data['total_cost']),
+            "consumption": invoice_data['consumption'],
+            "sent_date": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M"),
             "subject": f"Invoice {invoice_id}"
         }
         
         try:
-            # In real implementation, attach PDF to email
+            # Send to guest
             self.communication_service.send_email(
                 recipient=guest.email,
                 subject=f"Invoice {invoice_id}",
-                template_name="invoice_email",  # Would need to create this template
+                template_name="invoice_email",
                 context=context
             )
             
-            # Send copy to agent (in real implementation, use CC or BCC)
+            # Send copy to agent
             self.communication_service.send_email(
                 recipient=self.agent_email,
                 subject=f"Invoice Sent - {invoice_id}",
-                template_name="invoice_agent_copy",  # Would need to create this template
+                template_name="invoice_agent_copy",
                 context=context
             )
             
@@ -177,17 +266,86 @@ class InvoiceService:
     
     def check_and_generate_invoices(self) -> int:
         """Check for bookings that need invoices (3 days after departure)."""
-        cutoff_date = datetime.date.today() - datetime.timedelta(days=3)
-        
-        bookings = self.db.query(Booking).filter(
-            Booking.confirmed == True,
-            Booking.check_out <= cutoff_date,
-            Booking.invoice_created == False
-        ).all()
+        bookings = self.get_pending_invoice_bookings(self.db)
         
         generated_count = 0
         for booking in bookings:
             if self.generate_invoice_for_booking(booking.id):
                 generated_count += 1
         
-        return generated_count 
+        return generated_count
+
+    def send_invoice_email(self, booking_id: int) -> bool:
+        """Send invoice email for a booking (requires invoice to be generated first)."""
+        booking = self.db.query(Booking).filter(Booking.id == booking_id).first()
+        if not booking:
+            raise ValueError(f"Booking with ID {booking_id} not found")
+        
+        # Check if invoice has been generated
+        if not booking.invoice_id or not booking.invoice_created:
+            raise ValueError("Invoice has not been generated yet. Please generate invoice first.")
+        
+        # Calculate invoice amounts for email
+        invoice_data = self._calculate_invoice_amounts(booking)
+        
+        # Send invoice email
+        success = self._send_invoice_email_only(booking, booking.invoice_id, invoice_data)
+        
+        if success:
+            # Update booking status
+            booking.invoice_sent = True
+            booking.invoice_sent_date = datetime.datetime.utcnow()
+            self.db.commit()
+            
+            # Update booking status when invoice is sent
+            status_service = BookingStatusService(self.db)
+            status_service.update_status_on_invoice_sent(booking)
+        
+        return success
+
+    def _send_invoice_email_only(self, booking: Booking, invoice_id: str, invoice_data: dict) -> bool:
+        """Send invoice email with details in body (no PDF attachment)."""
+        guest = booking.guest
+        
+        # Format currency values
+        def format_currency(amount):
+            return f"€{amount:.2f}" if amount else "€0.00"
+        
+        context = {
+            "guest_name": f"{guest.first_name} {guest.last_name}",
+            "check_in_date": booking.check_in.strftime("%B %d, %Y"),
+            "check_out_date": booking.check_out.strftime("%B %d, %Y"),
+            "invoice_id": invoice_id,
+            "num_days": invoice_data['num_days'],
+            "accommodation_cost": format_currency(invoice_data['accommodation_cost']),
+            "electricity_cost": format_currency(invoice_data['electricity_cost']),
+            "gas_cost": format_currency(invoice_data['gas_cost']),
+            "firewood_cost": format_currency(invoice_data['firewood_cost']),
+            "kurtaxe_cost": format_currency(invoice_data['kurtaxe_cost']),
+            "total_cost": format_currency(invoice_data['total_cost']),
+            "consumption": invoice_data['consumption'],
+            "sent_date": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M"),
+            "subject": f"Invoice {invoice_id}"
+        }
+        
+        try:
+            # Send to guest
+            self.communication_service.send_email(
+                recipient=guest.email,
+                subject=f"Invoice {invoice_id}",
+                template_name="invoice_email",
+                context=context
+            )
+            
+            # Send copy to agent
+            self.communication_service.send_email(
+                recipient=self.agent_email,
+                subject=f"Invoice Sent - {invoice_id}",
+                template_name="invoice_agent_copy",
+                context=context
+            )
+            
+            return True
+        except Exception as e:
+            print(f"Failed to send invoice email: {e}")
+            return False 

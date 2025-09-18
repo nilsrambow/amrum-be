@@ -8,6 +8,7 @@ from app.models import Booking
 class BookingRepository:
     def __init__(self, db: Session):
         self.db = db
+        self.model = Booking
 
     def create(self, booking_data: dict) -> Booking:
         """Create a new booking in the database."""

@@ -1,30 +1,91 @@
 {% extends "base_email.html" %}
 
 {% block content %}
-<p>Invoice has been sent to guest for booking:</p>
+<div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
+    <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107; margin-bottom: 20px;">
+        <h3 style="color: #856404; margin-top: 0;">Agent Copy - Invoice Sent</h3>
+        <p style="margin-bottom: 0; color: #856404;">This is a copy of the invoice that was sent to the guest.</p>
+    </div>
 
-<div class="booking-details">
-    <h3>Booking Details:</h3>
-    <ul>
-        <li><strong>Guest:</strong> {{ guest_name }} ({{ guest_email }})</li>
-        <li><strong>Check-in:</strong> {{ check_in_date }}</li>
-        <li><strong>Check-out:</strong> {{ check_out_date }}</li>
-        <li><strong>Booking ID:</strong> {{ booking_id }}</li>
-    </ul>
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #2c3e50; margin-bottom: 10px;">INVOICE SENT</h1>
+        <p style="color: #7f8c8d; font-size: 18px;">{{ invoice_id }}</p>
+    </div>
+
+    <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+        <h2 style="color: #2c3e50; margin-top: 0;">Guest Information</h2>
+        <p><strong>Name:</strong> {{ guest_name }}</p>
+        <p><strong>Check-in:</strong> {{ check_in_date }}</p>
+        <p><strong>Check-out:</strong> {{ check_out_date }}</p>
+        <p><strong>Duration:</strong> {{ num_days }} days</p>
+    </div>
+
+    <div style="margin-bottom: 30px;">
+        <h2 style="color: #2c3e50;">Invoice Summary</h2>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+            <thead>
+                <tr style="background-color: #ecf0f1;">
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #bdc3c7;">Item</th>
+                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid #bdc3c7;">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if accommodation_cost != "€0.00" %}
+                <tr>
+                    <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">Accommodation</td>
+                    <td style="padding: 12px; text-align: right; border-bottom: 1px solid #ecf0f1;">{{ accommodation_cost }}</td>
+                </tr>
+                {% endif %}
+                
+                {% if electricity_cost != "€0.00" %}
+                <tr>
+                    <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">Electricity</td>
+                    <td style="padding: 12px; text-align: right; border-bottom: 1px solid #ecf0f1;">{{ electricity_cost }}</td>
+                </tr>
+                {% endif %}
+                
+                {% if gas_cost != "€0.00" %}
+                <tr>
+                    <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">Gas</td>
+                    <td style="padding: 12px; text-align: right; border-bottom: 1px solid #ecf0f1;">{{ gas_cost }}</td>
+                </tr>
+                {% endif %}
+                
+                {% if firewood_cost != "€0.00" %}
+                <tr>
+                    <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">Firewood</td>
+                    <td style="padding: 12px; text-align: right; border-bottom: 1px solid #ecf0f1;">{{ firewood_cost }}</td>
+                </tr>
+                {% endif %}
+                
+                {% if kurtaxe_cost != "€0.00" %}
+                <tr>
+                    <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">Tourist Tax</td>
+                    <td style="padding: 12px; text-align: right; border-bottom: 1px solid #ecf0f1;">{{ kurtaxe_cost }}</td>
+                </tr>
+                {% endif %}
+            </tbody>
+            <tfoot>
+                <tr style="background-color: #2c3e50; color: white; font-weight: bold;">
+                    <td style="padding: 15px; font-size: 18px;">TOTAL</td>
+                    <td style="padding: 15px; text-align: right; font-size: 18px;">{{ total_cost }}</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; border-left: 4px solid #27ae60;">
+        <h3 style="color: #27ae60; margin-top: 0;">Invoice Details</h3>
+        <p style="margin-bottom: 10px;"><strong>Invoice ID:</strong> {{ invoice_id }}</p>
+        <p style="margin-bottom: 10px;"><strong>Total Amount:</strong> {{ total_cost }}</p>
+        <p style="margin-bottom: 0;"><strong>Sent Date:</strong> {{ sent_date }}</p>
+    </div>
+
+    <div style="margin-top: 30px; text-align: center; color: #7f8c8d; font-size: 14px;">
+        <p>This invoice has been automatically sent to the guest.</p>
+        <p>Please monitor for payment confirmation.</p>
+    </div>
 </div>
-
-<div class="invoice-section">
-    <h3>Invoice Information:</h3>
-    <ul>
-        <li><strong>Invoice Number:</strong> {{ invoice_number }}</li>
-        <li><strong>Total Amount:</strong> €{{ total_amount }}</li>
-        <li><strong>Status:</strong> Sent to guest</li>
-    </ul>
-</div>
-
-<p>The invoice has been automatically generated and sent to the guest.</p>
-
-<p>This is an automated notification.</p>
 {% endblock %}
 
 {% block footer %}

@@ -1,7 +1,8 @@
 import datetime
+import secrets
 from enum import Enum
 
-from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, String, Float, Text, Enum as SQLEnum
+from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, String, Float, Text, Enum as SQLEnum, CheckConstraint
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -12,6 +13,20 @@ class PriceType(str, Enum):
     STAY_PER_NIGHT = "stay_per_night" 
     GAS_PER_CUBIC_METER = "gas_per_cubic_meter"
     FIREWOOD_PER_BOX = "firewood_per_box"
+
+
+class BookingStatus(str, Enum):
+    NEW = "new"
+    CONFIRMED = "confirmed"
+    KURKARTEN_REQUESTED = "kurkarten_requested"
+    READY_FOR_ARRIVAL = "ready_for_arrival"
+    ARRIVING = "arriving"
+    ON_SITE = "on_site"
+    DEPARTING = "departing"
+    DEPARTED_READINGS_DUE = "departed_readings_due"
+    DEPARTED_INVOICE_DUE = "departed_invoice_due"
+    DEPARTED_PAYMENT_DUE = "departed_payment_due"
+    DEPARTED_DONE = "departed_done"
 
 
 class Booking(Base):
@@ -26,6 +41,13 @@ class Booking(Base):
     invoice_created = Column(Boolean, default=False)
     invoice_sent = Column(Boolean, default=False)
     paid = Column(Boolean, default=False)
+    
+    # Booking status
+    status = Column(SQLEnum(BookingStatus), default=BookingStatus.NEW)
+    
+    # Guest access token
+    access_token = Column(String, unique=True, index=True, nullable=True)
+    token_expires_at = Column(DateTime, nullable=True)
     
     # Kurkarten email tracking
     kurkarten_email_sent = Column(Boolean, default=False)
@@ -46,9 +68,28 @@ class Booking(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     modified_at = Column(DateTime, default=datetime.datetime.utcnow)
 
+    # Database constraints
+    __table_args__ = (
+        CheckConstraint('check_out > check_in', name='check_out_after_check_in'),
+    )
+
     guest = relationship("Guest", back_populates="bookings")
     meter_readings = relationship("MeterReading", back_populates="booking", uselist=False)
     payments = relationship("Payment", back_populates="booking")
+
+
+class BookingToken(Base):
+    __tablename__ = "booking_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    booking_id = Column(Integer, ForeignKey("bookings.id"), nullable=False)
+    token = Column(String, unique=True, index=True, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    last_used_at = Column(DateTime, nullable=True)
+    
+    # Relationship
+    booking = relationship("Booking", backref="tokens")
 
 
 class Guest(Base):

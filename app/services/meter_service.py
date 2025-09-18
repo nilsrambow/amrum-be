@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.models import MeterReading, Booking
 from app.schemas import MeterReadingCreate, MeterReadingUpdate
+from app.services.booking_status_service import BookingStatusService
 
 
 class MeterService:
@@ -23,6 +24,10 @@ class MeterService:
                     setattr(existing, field, value)
             self.db.commit()
             self.db.refresh(existing)
+            
+            # Update booking status if readings were added
+            self._update_booking_status_on_readings(meter_data.booking_id)
+            
             return existing
         else:
             # Create new record
@@ -30,7 +35,18 @@ class MeterService:
             self.db.add(meter_reading)
             self.db.commit()
             self.db.refresh(meter_reading)
+            
+            # Update booking status when readings are added
+            self._update_booking_status_on_readings(meter_data.booking_id)
+            
             return meter_reading
+    
+    def _update_booking_status_on_readings(self, booking_id: int):
+        """Update booking status when meter readings are added."""
+        booking = self.db.query(Booking).filter(Booking.id == booking_id).first()
+        if booking:
+            status_service = BookingStatusService(self.db)
+            status_service.update_status_on_readings_added(booking)
     
     def update_meter_reading(self, booking_id: int, meter_data: MeterReadingUpdate) -> Optional[MeterReading]:
         """Update meter reading for a booking."""
@@ -80,13 +96,17 @@ class MeterService:
         
         summary = {}
         
-        # Electricity consumption
+        # Electricity consumption (kWh)
         if meter_reading.electricity_start is not None and meter_reading.electricity_end is not None:
             summary['electricity_kwh'] = meter_reading.electricity_end - meter_reading.electricity_start
         
-        # Gas consumption
+        # Gas consumption (convert from cubic meters to kWh)
         if meter_reading.gas_start is not None and meter_reading.gas_end is not None:
-            summary['gas_kwh'] = meter_reading.gas_end - meter_reading.gas_start
+            gas_cubic_meters = meter_reading.gas_end - meter_reading.gas_start
+            # Conversion factor: 1 cubic meter = 10.5 kWh (typical for natural gas)
+            gas_conversion_factor = 10.5
+            summary['gas_kwh'] = gas_cubic_meters * gas_conversion_factor
+            summary['gas_cubic_meters'] = gas_cubic_meters  # Keep original for reference
         
         # Firewood
         if meter_reading.firewood_boxes is not None:

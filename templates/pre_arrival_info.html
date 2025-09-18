@@ -1,30 +1,83 @@
-{% extends "base_email.html" %}
-
-{% block content %}
-<p>Hello {{ guest_name }},</p>
-
-<p>Your stay is approaching! Here's the latest information for your visit from {{ check_in_date }} to {{ check_out_date }}.</p>
-
-<div class="info-section">
-    <h3>Important Information:</h3>
-    <ul>
-        <li>Check-in: {{ check_in_date }}</li>
-        <li>Check-out: {{ check_out_date }}</li>
-        {% if kurtaxe_amount %}
-        <li>Tourist Tax (Kurtaxe): €{{ kurtaxe_amount }}</li>
-        {% endif %}
-    </ul>
-</div>
-
-{% if kurkarten_url %}
-<div class="info-section">
-    <h3>Kurkarten Information:</h3>
-    <p>Please complete your tourist card information if you haven't already:</p>
-    <p><a href="{{ kurkarten_url }}" style="color: #4CAF50;">Complete Kurkarten Form</a></p>
-</div>
-{% endif %}
-
-<p>We look forward to welcoming you!</p>
-
-<p>If you have any questions, please don't hesitate to contact us.</p>
-{% endblock %} 
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ subject }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .magic-link-section {
+            background-color: #e8f5e8;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border: 1px solid #4CAF50;
+        }
+        .button {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .footer {
+            font-size: 12px;
+            color: #777;
+            margin-top: 30px;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Haus B: Letzte Infos vor Deiner Anreise</h1>
+    </div>
+    
+    <p>Hallo {{ guest_name }},</p>
+    
+    <p>Bald schon fahrt ihr rüber auf die Insel Amrum, und ich bin mir sicher, ihr werdet traumhaftes Wetter und eine gute Zeit dort haben.</p>
+    
+    <p>Hier gibt es nun von mir die letzen Infos zur Anreise und zum Aufenthalt.</p>
+    
+    <p>Die Kurkarten bekommt ihr ca. drei Tage vor der Anreise per EMail, automatisch vom System geschickt. Bitte sagt Bescheid, falls die Kurkarten nicht ankommen sollten.</p>
+    
+    <p>Alle weiteren Infos zum Haus haben wir inzwischen online zusammen gestellt, Du findest alles unter dem folgenden Link:</p>
+    
+    {% if has_magic_link %}
+    <div class="magic-link-section">
+        <h3>Eure Buchung verwalten</h3>
+        <p>Ihr könnt Eure Buchungsdetails einsehen und Zählerstände hinzufügen über den folgenden Link:</p>
+        <a href="{{ magic_link }}" class="button">Buchungsdetails anzeigen</a>
+        <p><small>Dieser Link ist 3 Monate nach Eurer Abreise gültig.</small></p>
+    </div>
+    {% endif %}
+    
+    <p>Bitte tragt in diesem Formular auch die Zählerstände bei Anreise ein.</p>
+    
+    <p>Für die Abreise gibt es auch ein entsprechendes Online Dokument - Ihr könnt die Zählerstände über den gleichen Link eingeben. Ich erstelle dann postwendend eine Übersicht über die angefallenen Unkosten.</p>
+    
+    <p>Bei weiteren Fragen kommt gerne direkt auf mich zu.</p>
+    
+    <p>Viele Grüße und vorab schon mal eine schöne Zeit auf der Insel!<br>
+    Jochen, Ingo, Svenja, Gunnar und Nils</p>
+    
+    <div class="footer">
+        <p>Dies ist eine automatisch generierte Nachricht. Bitte antworten Sie nicht auf diese E-Mail.</p>
+    </div>
+</body>
+</html> 

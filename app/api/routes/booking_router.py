@@ -6,9 +6,9 @@ from app.config.config import get_email_config
 from app.database import get_db
 from app.guest_repository import GuestRepository
 from app.schemas import (
-    BookingCreate, BookingResponse, BookingUpdate, KurtaxeUpdate,
+    BookingCreate, BookingResponse, BookingUpdate, BookingPartialUpdate, KurtaxeUpdate,
     MeterReadingCreate, MeterReadingUpdate, MeterReadingResponse,
-    PaymentCreate, PaymentResponse
+    PaymentCreate, PaymentResponse, BookingTokenResponse
 )
 from app.services.booking_service import BookingService
 from app.services.communication_service import CommunicationService
@@ -16,6 +16,7 @@ from app.services.kurkarten_service import KurkartenService
 from app.services.meter_service import MeterService
 from app.services.payment_service import PaymentService
 from app.services.invoice_service import InvoiceService
+from app.services.token_service import TokenService
 
 router = APIRouter()
 
@@ -82,6 +83,31 @@ def list_bookings(booking_service: BookingService = Depends(get_booking_service)
         raise HTTPException(status_code=400, detail=str(e))
 
 
+@router.get("/booking/{booking_id}", response_model=BookingResponse)
+def get_booking_by_id(
+    booking_id: int, 
+    booking_service: BookingService = Depends(get_booking_service)
+):
+    """Get a specific booking by ID with invoice details."""
+    try:
+        return booking_service.get_booking_by_id_with_invoice(booking_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.patch("/booking/{booking_id}", response_model=BookingResponse)
+def update_booking(
+    booking_id: int,
+    booking_update: BookingPartialUpdate,
+    booking_service: BookingService = Depends(get_booking_service)
+):
+    """Update a booking by ID and reset all system-managed fields."""
+    try:
+        return booking_service.update_booking_partial(booking_id, booking_update)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
 @router.patch("/booking/{booking_id}/confirm", response_model=BookingResponse)
 def confirm_booking(
     booking_id: int, booking_service: BookingService = Depends(get_booking_service)
@@ -119,11 +145,31 @@ def generate_invoice(
     booking_id: int,
     invoice_service: InvoiceService = Depends(get_invoice_service)
 ):
-    """Generate and send invoice for a booking (for testing)."""
-    invoice_id = invoice_service.generate_invoice_for_booking(booking_id)
-    if invoice_id:
-        return {"message": "Invoice generated and sent", "invoice_id": invoice_id}
-    raise HTTPException(status_code=400, detail="Failed to generate invoice")
+    """Generate invoice data for a booking (does not send email)."""
+    try:
+        invoice_data = invoice_service.generate_invoice_data(booking_id)
+        return {
+            "message": "Invoice generated successfully", 
+            "invoice_id": invoice_data['invoice_id'],
+            "invoice_data": invoice_data
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/booking/{booking_id}/invoice/send")
+def send_invoice_email(
+    booking_id: int,
+    invoice_service: InvoiceService = Depends(get_invoice_service)
+):
+    """Send invoice email for a booking (requires invoice to be generated first)."""
+    try:
+        success = invoice_service.send_invoice_email(booking_id)
+        if success:
+            return {"message": "Invoice email sent successfully"}
+        raise HTTPException(status_code=400, detail="Failed to send invoice email")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.patch("/booking/{booking_id}/kurtaxe", response_model=BookingResponse)
@@ -181,7 +227,7 @@ def get_meter_reading(
     return meter_reading
 
 
-@router.post("/booking/{booking_id}/payments", response_model=PaymentResponse)
+@router.post("/booking/{booking_id}/payment", response_model=PaymentResponse)
 def register_payment(
     booking_id: int,
     payment_data: PaymentCreate,
@@ -192,10 +238,48 @@ def register_payment(
     return payment_service.register_payment(payment_data)
 
 
-@router.get("/booking/{booking_id}/payments", response_model=list[PaymentResponse])
+@router.get("/booking/{booking_id}/payment", response_model=list[PaymentResponse])
 def list_payments(
     booking_id: int,
     payment_service: PaymentService = Depends(get_payment_service)
 ):
     """List all payments for a booking."""
     return payment_service.get_payments_for_booking(booking_id)
+
+
+@router.get("/booking/{booking_id}/token", response_model=BookingTokenResponse)
+def get_booking_token(
+    booking_id: int,
+    db: Session = Depends(get_db)
+):
+    """Get token information for a booking (admin use)."""
+    token_service = TokenService(db)
+    token_info = token_service.get_token_info(booking_id)
+    
+    if not token_info:
+        raise HTTPException(
+            status_code=404, 
+            detail="No token found for this booking"
+        )
+    
+    return token_info
+
+
+@router.post("/booking/{booking_id}/token/regenerate")
+def regenerate_booking_token(
+    booking_id: int,
+    db: Session = Depends(get_db)
+):
+    """Regenerate token for a booking (admin use)."""
+    token_service = TokenService(db)
+    
+    # Revoke existing tokens
+    token_service.revoke_token(booking_id)
+    
+    # Generate new token
+    new_token = token_service.generate_token(booking_id)
+    
+    return {
+        "message": "Token regenerated successfully",
+        "token": new_token
+    }

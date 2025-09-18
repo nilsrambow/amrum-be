@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.models import Payment, Booking
 from app.schemas import PaymentCreate
+from app.services.booking_status_service import BookingStatusService
 
 
 class PaymentService:
@@ -15,6 +16,13 @@ class PaymentService:
         self.db.add(payment)
         self.db.commit()
         self.db.refresh(payment)
+        
+        # Update booking status when payment is registered
+        booking = self.db.query(Booking).filter(Booking.id == payment.booking_id).first()
+        if booking:
+            status_service = BookingStatusService(self.db)
+            status_service.update_status_on_payment_received(booking)
+        
         return payment
     
     def get_payments_for_booking(self, booking_id: int) -> List[Payment]:

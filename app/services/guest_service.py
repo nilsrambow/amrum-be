@@ -1,7 +1,7 @@
 from passlib.context import CryptContext
 
 from app.guest_repository import GuestRepository
-from app.schemas import GuestCreate
+from app.schemas import GuestCreate, GuestUpdate
 
 
 class GuestService:
@@ -38,3 +38,24 @@ class GuestService:
         if not guest:
             raise ValueError(f"Guest with ID {guest_id} not found")
         return guest
+
+    def update_guest(self, guest_id: int, guest_data: GuestUpdate):
+        """Update a guest by ID."""
+        from datetime import datetime
+        
+        guest = self.get_guest_by_id(guest_id)
+        
+        # Check if email is being updated and if it already exists
+        if guest_data.email and guest_data.email != guest.email:
+            existing_guest = self.repository.get_by_email(guest_data.email)
+            if existing_guest:
+                raise ValueError(f"Guest with email {guest_data.email} already exists")
+        
+        # Update the provided fields
+        for field, value in guest_data.dict(exclude_unset=True).items():
+            setattr(guest, field, value)
+        
+        # Update the modified timestamp
+        guest.modified_at = datetime.utcnow()
+        
+        return self.repository.update(guest)
