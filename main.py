@@ -1,15 +1,11 @@
 import asyncio
 from contextlib import asynccontextmanager
 
-<<<<<<< HEAD
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import admin_router, booking_router, guest_router
-=======
 from app.api.routes import booking_router, guest_router, admin_router, alert_router, guest_booking_router
->>>>>>> f543120 (added alerts)
 from app.services.scheduler_service import scheduler_service
 
 
