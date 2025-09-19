@@ -63,7 +63,11 @@ async def rate_limit_middleware(request: Request, call_next):
     
     # Check if limit exceeded
     if len(request_counts[client_ip]) >= rate_config["requests_per_minute"]:
-        raise HTTPException(status_code=429, detail="Rate limit exceeded")
+        from fastapi.responses import JSONResponse
+        return JSONResponse(
+            status_code=429,
+            content={"detail": "Rate limit exceeded"}
+        )
     
     # Add current request
     request_counts[client_ip].append(now)
