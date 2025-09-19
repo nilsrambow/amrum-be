@@ -1,11 +1,11 @@
 import asyncio
 from contextlib import asynccontextmanager
+from collections import defaultdict
+from datetime import datetime, timedelta
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi_limiter import FastAPILimiter
-from fastapi_limiter.depends import RateLimiter
 
 from app.api.routes import booking_router, guest_router, admin_router, alert_router, guest_booking_router
 from app.config.config import get_rate_limit_config
@@ -17,9 +17,6 @@ async def lifespan(app: FastAPI):
     # Startup
     print("Starting scheduler service...")
     scheduler_task = asyncio.create_task(scheduler_service.start_scheduler())
-    
-    # Initialize rate limiter (using in-memory storage for simplicity)
-    await FastAPILimiter.init()
 
     yield
 
@@ -47,15 +44,31 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Add global rate limiting dependency
+# Simple in-memory rate limiting
+request_counts = defaultdict(list)
+
 @app.middleware("http")
-async def rate_limit_middleware(request, call_next):
-    # Apply rate limiting to all requests
-    rate_limiter = RateLimiter(
-        times=rate_config["requests_per_minute"], 
-        seconds=60
-    )
-    await rate_limiter(request)
+async def rate_limit_middleware(request: Request, call_next):
+    # Get client IP
+    client_ip = request.client.host
+    
+    # Get current time
+    now = datetime.now()
+    
+    # Clean old requests (older than 1 minute)
+    request_counts[client_ip] = [
+        req_time for req_time in request_counts[client_ip] 
+        if now - req_time < timedelta(minutes=1)
+    ]
+    
+    # Check if limit exceeded
+    if len(request_counts[client_ip]) >= rate_config["requests_per_minute"]:
+        raise HTTPException(status_code=429, detail="Rate limit exceeded")
+    
+    # Add current request
+    request_counts[client_ip].append(now)
+    
+    # Process request
     response = await call_next(request)
     return response
 app.include_router(booking_router.router)
