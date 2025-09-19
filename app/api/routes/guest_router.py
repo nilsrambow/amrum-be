@@ -20,7 +20,8 @@ def get_guest_service(repository: GuestRepository = Depends(get_guest_repository
 
 @router.post("/guests", response_model=GuestResponse)
 def add_guest(
-    guest: GuestCreate, guest_service: GuestService = Depends(get_guest_service)
+    guest: GuestCreate, 
+    guest_service: GuestService = Depends(get_guest_service)
 ):
     try:
         return guest_service.create_guest(guest)

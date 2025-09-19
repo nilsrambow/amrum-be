@@ -21,3 +21,10 @@ def get_email_config():
 
 def get_database_url():
     return os.getenv("DATABASE_URL", "sqlite:///sqlite.db")
+
+
+def get_rate_limit_config():
+    return {
+        "requests_per_minute": int(os.getenv("RATE_LIMIT_REQUESTS_PER_MINUTE", "60")),
+        "burst_limit": int(os.getenv("RATE_LIMIT_BURST", "100")),
+    }

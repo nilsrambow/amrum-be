@@ -15,6 +15,8 @@ services:
       - EMAIL_USERNAME=${EMAIL_USERNAME}
       - EMAIL_PASSWORD=${EMAIL_PASSWORD}
       - SEND_REAL_EMAILS=${SEND_REAL_EMAILS:-true}
+      - RATE_LIMIT_REQUESTS_PER_MINUTE=${RATE_LIMIT_REQUESTS_PER_MINUTE:-60}
+      - RATE_LIMIT_BURST=${RATE_LIMIT_BURST:-100}
     external_links:
       - postgres:postgres
     restart: unless-stopped
