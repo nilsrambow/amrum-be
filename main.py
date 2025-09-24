@@ -45,29 +45,49 @@ app.add_middleware(
     allow_headers=cors_config["allow_headers"],
 )
 
-# Simple in-memory rate limiting
+# Improved in-memory rate limiting
 request_counts = defaultdict(list)
+last_cleanup = datetime.now()
 
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
+    global last_cleanup
+    
     # Get client IP
     client_ip = request.client.host
     
     # Get current time
     now = datetime.now()
     
-    # Clean old requests (older than 1 minute)
+    # Periodic cleanup to avoid memory bloat (every 5 minutes)
+    if now - last_cleanup > timedelta(minutes=5):
+        # Clean up old IPs that haven't been used recently
+        cutoff_time = now - timedelta(hours=1)
+        for ip in list(request_counts.keys()):
+            request_counts[ip] = [
+                req_time for req_time in request_counts[ip] 
+                if req_time > cutoff_time
+            ]
+            if not request_counts[ip]:
+                del request_counts[ip]
+        last_cleanup = now
+    
+    # Clean old requests for this IP (older than 1 minute)
     request_counts[client_ip] = [
         req_time for req_time in request_counts[client_ip] 
         if now - req_time < timedelta(minutes=1)
     ]
     
-    # Check if limit exceeded
+    # Check if limit would be exceeded
     if len(request_counts[client_ip]) >= rate_config["requests_per_minute"]:
         from fastapi.responses import JSONResponse
         return JSONResponse(
             status_code=429,
-            content={"detail": "Rate limit exceeded"}
+            content={
+                "detail": f"Rate limit exceeded. Max {rate_config['requests_per_minute']} requests per minute.",
+                "current_count": len(request_counts[client_ip]),
+                "limit": rate_config["requests_per_minute"]
+            }
         )
     
     # Add current request
@@ -76,6 +96,27 @@ async def rate_limit_middleware(request: Request, call_next):
     # Process request
     response = await call_next(request)
     return response
+# Debug endpoint to check rate limiting status
+@app.get("/debug/rate-limit-status")
+async def get_rate_limit_status(request: Request):
+    client_ip = request.client.host
+    now = datetime.now()
+    
+    # Clean old requests for this IP
+    request_counts[client_ip] = [
+        req_time for req_time in request_counts[client_ip] 
+        if now - req_time < timedelta(minutes=1)
+    ]
+    
+    return {
+        "client_ip": client_ip,
+        "current_requests": len(request_counts[client_ip]),
+        "limit": rate_config["requests_per_minute"],
+        "remaining": rate_config["requests_per_minute"] - len(request_counts[client_ip]),
+        "reset_time": "1 minute from oldest request" if request_counts[client_ip] else "immediately",
+        "total_tracked_ips": len(request_counts)
+    }
+
 app.include_router(booking_router.router)
 app.include_router(guest_router.router)
 app.include_router(admin_router.router)
