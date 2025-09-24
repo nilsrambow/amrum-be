@@ -9,6 +9,7 @@ from app.schemas import (
     ElectricityPriceCreate, StayPriceCreate, 
     GasPriceCreate, FirewoodPriceCreate
 )
+from app.auth_dependencies import get_current_admin
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -17,7 +18,8 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 @router.post("/pricing/electricity", response_model=UnitPriceResponse)
 def create_electricity_price(
     price_data: ElectricityPriceCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_admin = Depends(get_current_admin)
 ):
     """Create electricity price in EUR per kWh."""
     unit_price = UnitPrice(
@@ -31,7 +33,10 @@ def create_electricity_price(
 
 
 @router.get("/pricing/electricity", response_model=List[UnitPriceResponse])
-def list_electricity_prices(db: Session = Depends(get_db)):
+def list_electricity_prices(
+    db: Session = Depends(get_db),
+    current_admin = Depends(get_current_admin)
+):
     """List all electricity prices."""
     return db.query(UnitPrice).filter(
         UnitPrice.price_type == PriceType.ELECTRICITY_PER_KWH
@@ -42,7 +47,8 @@ def list_electricity_prices(db: Session = Depends(get_db)):
 @router.post("/pricing/stay", response_model=UnitPriceResponse)
 def create_stay_price(
     price_data: StayPriceCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_admin = Depends(get_current_admin)
 ):
     """Create accommodation price in EUR per night."""
     unit_price = UnitPrice(
@@ -56,7 +62,10 @@ def create_stay_price(
 
 
 @router.get("/pricing/stay", response_model=List[UnitPriceResponse])
-def list_stay_prices(db: Session = Depends(get_db)):
+def list_stay_prices(
+    db: Session = Depends(get_db),
+    current_admin = Depends(get_current_admin)
+):
     """List all accommodation prices."""
     return db.query(UnitPrice).filter(
         UnitPrice.price_type == PriceType.STAY_PER_NIGHT
@@ -67,7 +76,8 @@ def list_stay_prices(db: Session = Depends(get_db)):
 @router.post("/pricing/gas", response_model=UnitPriceResponse)
 def create_gas_price(
     price_data: GasPriceCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_admin = Depends(get_current_admin)
 ):
     """Create gas price in EUR per cubic meter."""
     unit_price = UnitPrice(
@@ -81,7 +91,10 @@ def create_gas_price(
 
 
 @router.get("/pricing/gas", response_model=List[UnitPriceResponse])
-def list_gas_prices(db: Session = Depends(get_db)):
+def list_gas_prices(
+    db: Session = Depends(get_db),
+    current_admin = Depends(get_current_admin)
+):
     """List all gas prices."""
     return db.query(UnitPrice).filter(
         UnitPrice.price_type == PriceType.GAS_PER_CUBIC_METER
@@ -92,7 +105,8 @@ def list_gas_prices(db: Session = Depends(get_db)):
 @router.post("/pricing/firewood", response_model=UnitPriceResponse)
 def create_firewood_price(
     price_data: FirewoodPriceCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_admin = Depends(get_current_admin)
 ):
     """Create firewood price in EUR per box."""
     unit_price = UnitPrice(
@@ -106,7 +120,10 @@ def create_firewood_price(
 
 
 @router.get("/pricing/firewood", response_model=List[UnitPriceResponse])
-def list_firewood_prices(db: Session = Depends(get_db)):
+def list_firewood_prices(
+    db: Session = Depends(get_db),
+    current_admin = Depends(get_current_admin)
+):
     """List all firewood prices."""
     return db.query(UnitPrice).filter(
         UnitPrice.price_type == PriceType.FIREWOOD_PER_BOX

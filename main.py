@@ -7,7 +7,7 @@ import uvicorn
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import booking_router, guest_router, admin_router, alert_router, guest_booking_router
+from app.api.routes import booking_router, guest_router, admin_router, alert_router, guest_booking_router, auth_router
 from app.config.config import get_rate_limit_config, get_cors_config
 from app.services.scheduler_service import scheduler_service
 
@@ -81,6 +81,7 @@ app.include_router(guest_router.router)
 app.include_router(admin_router.router)
 app.include_router(alert_router.router)
 app.include_router(guest_booking_router.router)
+app.include_router(auth_router.router)
 
 
 if __name__ == "__main__":

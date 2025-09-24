@@ -289,3 +289,38 @@ class GuestBookingResponse(BaseModel):
 
     class Config:
         from_attribute = True
+
+
+# Authentication Schemas
+class AdminUserBase(BaseModel):
+    username: str
+    email: EmailStr
+
+
+class AdminUserCreate(AdminUserBase):
+    password: str
+
+
+class AdminUserResponse(AdminUserBase):
+    id: int
+    is_active: bool
+    is_superuser: bool
+    created_at: datetime.datetime
+    last_login: Optional[datetime.datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    username: Optional[str] = None
+
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
