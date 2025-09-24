@@ -8,7 +8,7 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import booking_router, guest_router, admin_router, alert_router, guest_booking_router
-from app.config.config import get_rate_limit_config
+from app.config.config import get_rate_limit_config, get_cors_config
 from app.services.scheduler_service import scheduler_service
 
 
@@ -32,16 +32,17 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-# Get rate limit configuration
+# Get configurations
 rate_config = get_rate_limit_config()
+cors_config = get_cors_config()
 
-# Add global rate limiting middleware
+# Add CORS middleware - restrict to allowed frontends only
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*", "https://127.0.0.1:8080", "http://localhost:8080"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=cors_config["allow_origins"],
+    allow_credentials=cors_config["allow_credentials"],
+    allow_methods=cors_config["allow_methods"],
+    allow_headers=cors_config["allow_headers"],
 )
 
 # Simple in-memory rate limiting

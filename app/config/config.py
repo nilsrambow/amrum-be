@@ -28,3 +28,17 @@ def get_rate_limit_config():
         "requests_per_minute": int(os.getenv("RATE_LIMIT_REQUESTS_PER_MINUTE", "60")),
         "burst_limit": int(os.getenv("RATE_LIMIT_BURST", "100")),
     }
+
+
+def get_cors_config():
+    """Get CORS configuration from environment variables."""
+    # Parse comma-separated allowed origins
+    origins_str = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:8080,https://localhost:8080")
+    allowed_origins = [origin.strip() for origin in origins_str.split(",") if origin.strip()]
+    
+    return {
+        "allow_origins": allowed_origins,
+        "allow_credentials": os.getenv("CORS_ALLOW_CREDENTIALS", "true").lower() == "true",
+        "allow_methods": os.getenv("CORS_ALLOW_METHODS", "GET,POST,PUT,PATCH,DELETE").split(","),
+        "allow_headers": os.getenv("CORS_ALLOW_HEADERS", "Content-Type,Authorization").split(","),
+    }
