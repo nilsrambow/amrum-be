@@ -24,9 +24,15 @@ def get_database_url():
 
 
 def get_rate_limit_config():
+    requests_per_minute = os.getenv("RATE_LIMIT_REQUESTS_PER_MINUTE", "60")
+    burst_limit = os.getenv("RATE_LIMIT_BURST", "100")
+    
+    print(f"DEBUG: RATE_LIMIT_REQUESTS_PER_MINUTE env var: {requests_per_minute}")
+    print(f"DEBUG: RATE_LIMIT_BURST env var: {burst_limit}")
+    
     return {
-        "requests_per_minute": int(os.getenv("RATE_LIMIT_REQUESTS_PER_MINUTE", "60")),
-        "burst_limit": int(os.getenv("RATE_LIMIT_BURST", "100")),
+        "requests_per_minute": int(requests_per_minute),
+        "burst_limit": int(burst_limit),
     }
 
 
