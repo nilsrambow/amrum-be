@@ -44,7 +44,7 @@ class DashboardService:
         
         # Total occupied nights: sum of (check_out - check_in) for bookings in the year
         occupied_nights_result = self.db.query(
-            func.sum(func.extract('day', Booking.check_out - Booking.check_in))
+            func.sum(Booking.check_out - Booking.check_in)
         ).filter(
             and_(
                 Booking.check_in >= year_start,
@@ -53,7 +53,7 @@ class DashboardService:
             )
         ).scalar()
         
-        total_occupied_nights = int(occupied_nights_result) if occupied_nights_result else 0
+        total_occupied_nights = int(occupied_nights_result.days) if occupied_nights_result else 0
         
         # Total invoice amount: sum of payments made in the specified year
         # Note: This uses payment_date for the year calculation as per requirements
