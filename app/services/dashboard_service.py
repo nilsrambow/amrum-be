@@ -53,7 +53,7 @@ class DashboardService:
             )
         ).scalar()
         
-        total_occupied_nights = int(occupied_nights_result.days) if occupied_nights_result else 0
+        total_occupied_nights = int(occupied_nights_result) if occupied_nights_result else 0
         
         # Total invoice amount: sum of payments made in the specified year
         # Note: This uses payment_date for the year calculation as per requirements
