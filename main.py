@@ -7,7 +7,7 @@ import uvicorn
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import booking_router, guest_router, admin_router, alert_router, guest_booking_router, auth_router
+from app.api.routes import booking_router, guest_router, admin_router, alert_router, guest_booking_router, auth_router, dashboard_router
 from app.config.config import get_rate_limit_config, get_cors_config
 from app.services.scheduler_service import scheduler_service
 
@@ -114,13 +114,7 @@ async def get_rate_limit_status(request: Request):
         "limit": rate_config["requests_per_minute"],
         "remaining": rate_config["requests_per_minute"] - len(request_counts[client_ip]),
         "reset_time": "1 minute from oldest request" if request_counts[client_ip] else "immediately",
-        "total_tracked_ips": len(request_counts),
-        "debug_info": {
-            "rate_config": rate_config,
-            "env_var_requests_per_minute": os.getenv("RATE_LIMIT_REQUESTS_PER_MINUTE", "NOT_SET"),
-            "env_var_burst": os.getenv("RATE_LIMIT_BURST", "NOT_SET"),
-            "env_var_env": os.getenv("ENV", "NOT_SET")
-        }
+        "total_tracked_ips": len(request_counts)
     }
 
 app.include_router(booking_router.router)
@@ -129,6 +123,7 @@ app.include_router(admin_router.router)
 app.include_router(alert_router.router)
 app.include_router(guest_booking_router.router)
 app.include_router(auth_router.router)
+app.include_router(dashboard_router.router)
 
 
 if __name__ == "__main__":
