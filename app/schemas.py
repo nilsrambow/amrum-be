@@ -324,3 +324,21 @@ class TokenData(BaseModel):
 class LoginRequest(BaseModel):
     username: str
     password: str
+
+
+# Dashboard Statistics Schemas
+class DashboardStatsResponse(BaseModel):
+    total_bookings: int
+    total_invoice_amount: float
+    total_occupied_nights: int
+    year: int
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "total_bookings": 45,
+                "total_invoice_amount": 12500.50,
+                "total_occupied_nights": 320,
+                "year": 2024
+            }
+        }

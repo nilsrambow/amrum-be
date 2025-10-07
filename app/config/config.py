@@ -1,11 +1,6 @@
 import os
-import logging
 
 from dotenv import find_dotenv, load_dotenv
-
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 # Find the correct .env file based on the current environment
 env = os.getenv("ENV", "development")
@@ -31,9 +26,6 @@ def get_database_url():
 def get_rate_limit_config():
     requests_per_minute = os.getenv("RATE_LIMIT_REQUESTS_PER_MINUTE", "6000")
     burst_limit = os.getenv("RATE_LIMIT_BURST", "10000")
-    
-    logger.info(f"DEBUG: RATE_LIMIT_REQUESTS_PER_MINUTE env var: {requests_per_minute}")
-    logger.info(f"DEBUG: RATE_LIMIT_BURST env var: {burst_limit}")
     
     return {
         "requests_per_minute": int(requests_per_minute),
