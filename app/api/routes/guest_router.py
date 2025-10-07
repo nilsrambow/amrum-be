@@ -6,6 +6,7 @@ from app.database import get_db
 from app.guest_repository import GuestRepository
 from app.schemas import GuestCreate, GuestResponse, GuestUpdate
 from app.services.guest_service import GuestService
+from app.auth_dependencies import get_current_admin
 
 router = APIRouter()
 
@@ -20,7 +21,9 @@ def get_guest_service(repository: GuestRepository = Depends(get_guest_repository
 
 @router.post("/guests", response_model=GuestResponse)
 def add_guest(
-    guest: GuestCreate, guest_service: GuestService = Depends(get_guest_service)
+    guest: GuestCreate, 
+    guest_service: GuestService = Depends(get_guest_service),
+    current_admin = Depends(get_current_admin)
 ):
     try:
         return guest_service.create_guest(guest)
@@ -29,7 +32,10 @@ def add_guest(
 
 
 @router.get("/guests", response_model=list[GuestResponse])
-def list_guests(guest_service: GuestService = Depends(get_guest_service)):
+def list_guests(
+    guest_service: GuestService = Depends(get_guest_service),
+    current_admin = Depends(get_current_admin)
+):
     try:
         return guest_service.get_all_guests()
     except ValueError as e:
@@ -38,7 +44,9 @@ def list_guests(guest_service: GuestService = Depends(get_guest_service)):
 
 @router.get("/guest/{guest_id}", response_model=GuestResponse)
 def get_guest_by_id(
-    guest_id: int, guest_service: GuestService = Depends(get_guest_service)
+    guest_id: int, 
+    guest_service: GuestService = Depends(get_guest_service),
+    current_admin = Depends(get_current_admin)
 ):
     """Get a specific guest by ID."""
     try:
@@ -51,7 +59,8 @@ def get_guest_by_id(
 def update_guest(
     guest_id: int,
     guest_update: GuestUpdate,
-    guest_service: GuestService = Depends(get_guest_service)
+    guest_service: GuestService = Depends(get_guest_service),
+    current_admin = Depends(get_current_admin)
 ):
     """Update a guest by ID."""
     try:

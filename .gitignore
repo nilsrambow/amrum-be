@@ -1,4 +1,4 @@
-alembic/
+alembic*
 thisvenvwindows
 .env*
 amr-venv/

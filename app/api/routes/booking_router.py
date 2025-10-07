@@ -17,6 +17,7 @@ from app.services.meter_service import MeterService
 from app.services.payment_service import PaymentService
 from app.services.invoice_service import InvoiceService
 from app.services.token_service import TokenService
+from app.auth_dependencies import get_current_admin
 
 router = APIRouter()
 
@@ -68,6 +69,7 @@ def get_invoice_service(
 def add_booking(
     booking: BookingCreate,
     booking_service: BookingService = Depends(get_booking_service),
+    current_admin = Depends(get_current_admin)
 ):
     try:
         return booking_service.create_booking(booking)
@@ -76,7 +78,10 @@ def add_booking(
 
 
 @router.get("/bookings", response_model=list[BookingResponse])
-def list_bookings(booking_service: BookingService = Depends(get_booking_service)):
+def list_bookings(
+    booking_service: BookingService = Depends(get_booking_service),
+    current_admin = Depends(get_current_admin)
+):
     try:
         return booking_service.get_all_bookings()
     except ValueError as e:
@@ -86,7 +91,8 @@ def list_bookings(booking_service: BookingService = Depends(get_booking_service)
 @router.get("/booking/{booking_id}", response_model=BookingResponse)
 def get_booking_by_id(
     booking_id: int, 
-    booking_service: BookingService = Depends(get_booking_service)
+    booking_service: BookingService = Depends(get_booking_service),
+    current_admin = Depends(get_current_admin)
 ):
     """Get a specific booking by ID with invoice details."""
     try:
@@ -99,7 +105,8 @@ def get_booking_by_id(
 def update_booking(
     booking_id: int,
     booking_update: BookingPartialUpdate,
-    booking_service: BookingService = Depends(get_booking_service)
+    booking_service: BookingService = Depends(get_booking_service),
+    current_admin = Depends(get_current_admin)
 ):
     """Update a booking by ID and reset all system-managed fields."""
     try:
@@ -110,7 +117,9 @@ def update_booking(
 
 @router.patch("/booking/{booking_id}/confirm", response_model=BookingResponse)
 def confirm_booking(
-    booking_id: int, booking_service: BookingService = Depends(get_booking_service)
+    booking_id: int, 
+    booking_service: BookingService = Depends(get_booking_service),
+    current_admin = Depends(get_current_admin)
 ):
     try:
         return booking_service.confirm_booking(booking_id)
@@ -121,7 +130,8 @@ def confirm_booking(
 @router.post("/booking/{booking_id}/kurkarten/send")
 def send_kurkarten_email(
     booking_id: int,
-    kurkarten_service: KurkartenService = Depends(get_kurkarten_service)
+    kurkarten_service: KurkartenService = Depends(get_kurkarten_service),
+    current_admin = Depends(get_current_admin)
 ):
     """Send kurkarten request email to guest (for testing)."""
     if kurkarten_service.send_kurkarten_request_email(booking_id):
@@ -132,7 +142,8 @@ def send_kurkarten_email(
 @router.post("/booking/{booking_id}/pre-arrival/send")
 def send_pre_arrival_email(
     booking_id: int,
-    kurkarten_service: KurkartenService = Depends(get_kurkarten_service)
+    kurkarten_service: KurkartenService = Depends(get_kurkarten_service),
+    current_admin = Depends(get_current_admin)
 ):
     """Send pre-arrival information email to guest (for testing)."""
     if kurkarten_service.send_pre_arrival_email(booking_id):
@@ -143,7 +154,8 @@ def send_pre_arrival_email(
 @router.post("/booking/{booking_id}/invoice/generate")
 def generate_invoice(
     booking_id: int,
-    invoice_service: InvoiceService = Depends(get_invoice_service)
+    invoice_service: InvoiceService = Depends(get_invoice_service),
+    current_admin = Depends(get_current_admin)
 ):
     """Generate invoice data for a booking (does not send email)."""
     try:
@@ -160,7 +172,8 @@ def generate_invoice(
 @router.post("/booking/{booking_id}/invoice/send")
 def send_invoice_email(
     booking_id: int,
-    invoice_service: InvoiceService = Depends(get_invoice_service)
+    invoice_service: InvoiceService = Depends(get_invoice_service),
+    current_admin = Depends(get_current_admin)
 ):
     """Send invoice email for a booking (requires invoice to be generated first)."""
     try:
@@ -176,7 +189,8 @@ def send_invoice_email(
 def update_kurtaxe(
     booking_id: int,
     kurtaxe_data: KurtaxeUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_admin = Depends(get_current_admin)
 ):
     """Update kurtaxe (tourist tax) information for a booking."""
     from app.models import Booking
@@ -199,7 +213,8 @@ def update_kurtaxe(
 def create_or_update_meter_reading(
     booking_id: int,
     meter_data: MeterReadingUpdate,
-    meter_service: MeterService = Depends(get_meter_service)
+    meter_service: MeterService = Depends(get_meter_service),
+    current_admin = Depends(get_current_admin)
 ):
     """Create or update meter readings for a booking."""
     meter_create_data = MeterReadingCreate(
@@ -217,7 +232,8 @@ def create_or_update_meter_reading(
 @router.get("/booking/{booking_id}/meter-readings", response_model=MeterReadingResponse)
 def get_meter_reading(
     booking_id: int,
-    meter_service: MeterService = Depends(get_meter_service)
+    meter_service: MeterService = Depends(get_meter_service),
+    current_admin = Depends(get_current_admin)
 ):
     """Get meter readings for a booking."""
     meter_reading = meter_service.get_meter_reading(booking_id)
@@ -231,7 +247,8 @@ def get_meter_reading(
 def register_payment(
     booking_id: int,
     payment_data: PaymentCreate,
-    payment_service: PaymentService = Depends(get_payment_service)
+    payment_service: PaymentService = Depends(get_payment_service),
+    current_admin = Depends(get_current_admin)
 ):
     """Register a payment for a booking."""
     payment_data.booking_id = booking_id
@@ -241,7 +258,8 @@ def register_payment(
 @router.get("/booking/{booking_id}/payment", response_model=list[PaymentResponse])
 def list_payments(
     booking_id: int,
-    payment_service: PaymentService = Depends(get_payment_service)
+    payment_service: PaymentService = Depends(get_payment_service),
+    current_admin = Depends(get_current_admin)
 ):
     """List all payments for a booking."""
     return payment_service.get_payments_for_booking(booking_id)
@@ -250,7 +268,8 @@ def list_payments(
 @router.get("/booking/{booking_id}/token", response_model=BookingTokenResponse)
 def get_booking_token(
     booking_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_admin = Depends(get_current_admin)
 ):
     """Get token information for a booking (admin use)."""
     token_service = TokenService(db)
@@ -268,7 +287,8 @@ def get_booking_token(
 @router.post("/booking/{booking_id}/token/regenerate")
 def regenerate_booking_token(
     booking_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_admin = Depends(get_current_admin)
 ):
     """Regenerate token for a booking (admin use)."""
     token_service = TokenService(db)
