@@ -36,7 +36,7 @@ def get_rate_limit_config():
 def get_cors_config():
     """Get CORS configuration from environment variables."""
     # Parse comma-separated allowed origins
-    origins_str = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:8080,https://localhost:8080","http://192.167.178.42:7000,https://192.168.178.42:7000")
+    origins_str = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:8080,https://localhost:8080,http://192.167.178.42:7000,https://192.168.178.42:7000")
     allowed_origins = [origin.strip() for origin in origins_str.split(",") if origin.strip()]
     
     return {
