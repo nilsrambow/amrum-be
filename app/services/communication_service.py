@@ -76,15 +76,15 @@ class CommunicationService:
         message.attach(MIMEText(html_content, "html"))
 
         # print instead of send_message
-        if env == "development":
-            print("\n----- DEV MODE: EMAIL NOT ACTUALLY SENT -----")
-            print(f"From: {message['From']}")
-            print(f"To: {message['To']}")
-            print(f"Subject: {message['Subject']}")
-            print(f"\nBody:\n{html_content}")
-            print("-----------------------------------------\n")
+        # if env == "development":
+        #     print("\n----- DEV MODE: EMAIL NOT ACTUALLY SENT -----")
+        #     print(f"From: {message['From']}")
+        #     print(f"To: {message['To']}")
+        #     print(f"Subject: {message['Subject']}")
+        #     print(f"\nBody:\n{html_content}")
+        #     print("-----------------------------------------\n")
 
-            return True
+        #     return True
 
         # Send email
         with smtplib.SMTP(
