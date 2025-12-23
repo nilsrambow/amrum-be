@@ -41,6 +41,8 @@ def get_cors_config():
             "https://homeserver.lan:7000",
             "http://192.168.178.42:7000",
             "https://192.168.178.42:7000",
+            "https://rambow09.dedyns.io",
+            "http://rambow09.dedyns.io",
         ],
         "allow_credentials": False,
         "allow_methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
