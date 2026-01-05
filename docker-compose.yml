@@ -9,7 +9,7 @@ services:
       dockerfile: Dockerfile.dev
     container_name: dev-amrum-be
     ports:
-      - "7050:8000"
+      - "6500:8000"
     environment:
       - PYTHONUNBUFFERED=1
       - ENV=${ENV:-development}
@@ -42,7 +42,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "7100:5432"  # External access for DB tools
+      - "6100:5432"  # External access for DB tools
     volumes:
       - dev_postgres_data:/var/lib/postgresql/data
     networks:
