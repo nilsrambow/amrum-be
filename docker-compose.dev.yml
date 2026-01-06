@@ -6,7 +6,7 @@ services:
   amrum-be:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     container_name: dev-amrum-be
     ports:
       - "6500:8000"
