@@ -34,17 +34,11 @@ def get_rate_limit_config():
 
 
 def get_cors_config():
-    """Get CORS configuration - hardcoded values."""
+    allowed_origins = os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if os.getenv("CORS_ALLOWED_ORIGINS") else []
+    if not allowed_origins:
+        print("No CORS_ALLOWED_ORIGINS found in environment variables")
     return {
-        "allow_origins": [
-            "http://192.168.178.42:6333",
-            "http://homeserver.lan:7000",
-            "https://homeserver.lan:7000",
-            "http://192.168.178.42:7000",
-            "https://192.168.178.42:7000",
-            "https://rambow09.dedyn.io",
-            "http://rambow09.dedyn.io",
-        ],
+        "allow_origins": allowed_origins,
         "allow_credentials": False,
         "allow_methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         "allow_headers": [
