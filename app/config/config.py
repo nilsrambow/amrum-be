@@ -37,6 +37,7 @@ def get_cors_config():
     """Get CORS configuration - hardcoded values."""
     return {
         "allow_origins": [
+            "http://192.168.178.42:6333",
             "http://homeserver.lan:7000",
             "https://homeserver.lan:7000",
             "http://192.168.178.42:7000",
