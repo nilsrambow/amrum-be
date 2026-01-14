@@ -98,6 +98,20 @@ async def _agent_starlette_http_exception_handler(request: Request, exc: Starlet
 rate_config = get_rate_limit_config()
 cors_config = get_cors_config()
 
+# region agent log - effective CORS config
+_agent_log(
+    hypothesisId="E",
+    location="main.py:cors_config",
+    message="Effective CORS config",
+    data={
+        "allow_origins": cors_config.get("allow_origins"),
+        "allow_credentials": cors_config.get("allow_credentials"),
+        "allow_methods": cors_config.get("allow_methods"),
+        "allow_headers": cors_config.get("allow_headers"),
+    },
+)
+# endregion
+
 # Add CORS middleware - restrict to allowed frontends only
 app.add_middleware(
     CORSMiddleware,
@@ -158,7 +172,15 @@ async def rate_limit_middleware(request: Request, call_next):
     # region agent log - login request probe (runs before route parsing)
     if request.url.path == "/auth/login":
         safe_headers = {}
-        for k in ("content-type", "origin", "host", "user-agent", "referer"):
+        for k in (
+            "content-type",
+            "origin",
+            "host",
+            "user-agent",
+            "referer",
+            "access-control-request-method",
+            "access-control-request-headers",
+        ):
             v = request.headers.get(k)
             if v:
                 safe_headers[k] = v
