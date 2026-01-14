@@ -2,6 +2,7 @@
 Authentication router for admin login and user management.
 """
 import json
+import os
 from datetime import datetime as _dt
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -16,7 +17,7 @@ from app.models import AdminUser
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
 # region agent log helpers
-_AGENT_DEBUG_LOG_PATH = "/Users/nils/coding/amrum-be/.cursor/debug.log"
+_AGENT_DEBUG_LOG_PATH = os.getenv("AGENT_DEBUG_LOG_PATH", "/Users/nils/coding/amrum-be/.cursor/debug.log")
 
 
 def _agent_log(*, hypothesisId: str, location: str, message: str, data: dict):

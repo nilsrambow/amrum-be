@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from collections import defaultdict
 from datetime import datetime, timedelta
 import json
+import os
 
 import uvicorn
 from fastapi import FastAPI, Request, HTTPException
@@ -16,7 +17,7 @@ from app.config.config import get_rate_limit_config, get_cors_config
 from app.services.scheduler_service import scheduler_service
 
 # region agent log helpers
-_AGENT_DEBUG_LOG_PATH = "/Users/nils/coding/amrum-be/.cursor/debug.log"
+_AGENT_DEBUG_LOG_PATH = os.getenv("AGENT_DEBUG_LOG_PATH", "/Users/nils/coding/amrum-be/.cursor/debug.log")
 
 
 def _agent_log(*, hypothesisId: str, location: str, message: str, data: dict):
