@@ -35,19 +35,10 @@ def get_rate_limit_config():
 
 def get_cors_config():
     raw = os.getenv("CORS_ALLOWED_ORIGINS")
-    allowed_origins = (
-        [o.strip() for o in (raw or "").split(",") if o.strip()]
-        if raw is not None
-        else []
-    )
-
-    # In development, default to allow-all if not configured.
-    # Otherwise (e.g. production), keep it locked down.
+    allowed_origins = [o.strip() for o in raw.split(",")] if raw else []
+    allowed_origins = [o for o in allowed_origins if o]
     if not allowed_origins:
-        if env.lower() in ("development", "dev", "local"):
-            allowed_origins = ["*"]
-        else:
-            print("No CORS_ALLOWED_ORIGINS found in environment variables")
+        print("No CORS_ALLOWED_ORIGINS found in environment variables")
     return {
         "allow_origins": allowed_origins,
         "allow_credentials": False,

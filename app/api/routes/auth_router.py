@@ -1,8 +1,6 @@
 """
 Authentication router for admin login and user management.
 """
-import json
-from datetime import datetime as _dt
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -15,24 +13,6 @@ from app.models import AdminUser
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
-# region agent log helpers
-def _agent_log(*, hypothesisId: str, location: str, message: str, data: dict):
-    # Never log secrets (passwords/tokens/PII). Keep payload small.
-    try:
-        payload = {
-            "sessionId": "debug-session",
-            "runId": "pre-fix",
-            "hypothesisId": hypothesisId,
-            "location": location,
-            "message": message,
-            "data": data,
-            "timestamp": int(_dt.now().timestamp() * 1000),
-        }
-        print(json.dumps(payload, ensure_ascii=False), flush=True)
-    except Exception:
-        pass
-# endregion
-
 
 @router.post("/login", response_model=Token)
 def login(
@@ -41,19 +21,6 @@ def login(
 ):
     """Login endpoint for admin users."""
     auth_service = AuthService(db)
-
-    # region agent log
-    _agent_log(
-        hypothesisId="D",
-        location="auth_router.py:login:entered",
-        message="Entered /auth/login route",
-        data={
-            "username_len": len(login_data.username) if isinstance(login_data.username, str) else None,
-            "username_has_at": ("@" in login_data.username) if isinstance(login_data.username, str) else None,
-            "password_len": len(login_data.password) if isinstance(login_data.password, str) else None,
-        },
-    )
-    # endregion
     
     # Authenticate user
     admin = auth_service.authenticate_admin(login_data.username, login_data.password)
