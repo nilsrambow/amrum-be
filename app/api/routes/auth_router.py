@@ -2,7 +2,6 @@
 Authentication router for admin login and user management.
 """
 import json
-import os
 from datetime import datetime as _dt
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -17,9 +16,6 @@ from app.models import AdminUser
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
 # region agent log helpers
-_AGENT_DEBUG_LOG_PATH = os.getenv("AGENT_DEBUG_LOG_PATH", "/Users/nils/coding/amrum-be/.cursor/debug.log")
-
-
 def _agent_log(*, hypothesisId: str, location: str, message: str, data: dict):
     # Never log secrets (passwords/tokens/PII). Keep payload small.
     try:
@@ -32,8 +28,7 @@ def _agent_log(*, hypothesisId: str, location: str, message: str, data: dict):
             "data": data,
             "timestamp": int(_dt.now().timestamp() * 1000),
         }
-        with open(_AGENT_DEBUG_LOG_PATH, "a", encoding="utf-8") as f:
-            f.write(json.dumps(payload, ensure_ascii=False) + "\n")
+        print(json.dumps(payload, ensure_ascii=False), flush=True)
     except Exception:
         pass
 # endregion

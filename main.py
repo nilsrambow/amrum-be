@@ -3,7 +3,6 @@ from contextlib import asynccontextmanager
 from collections import defaultdict
 from datetime import datetime, timedelta
 import json
-import os
 
 import uvicorn
 from fastapi import FastAPI, Request, HTTPException
@@ -17,9 +16,6 @@ from app.config.config import get_rate_limit_config, get_cors_config
 from app.services.scheduler_service import scheduler_service
 
 # region agent log helpers
-_AGENT_DEBUG_LOG_PATH = os.getenv("AGENT_DEBUG_LOG_PATH", "/Users/nils/coding/amrum-be/.cursor/debug.log")
-
-
 def _agent_log(*, hypothesisId: str, location: str, message: str, data: dict):
     # Never log secrets (passwords/tokens/PII). Keep payload small.
     try:
@@ -32,8 +28,7 @@ def _agent_log(*, hypothesisId: str, location: str, message: str, data: dict):
             "data": data,
             "timestamp": int(datetime.now().timestamp() * 1000),
         }
-        with open(_AGENT_DEBUG_LOG_PATH, "a", encoding="utf-8") as f:
-            f.write(json.dumps(payload, ensure_ascii=False) + "\n")
+        print(json.dumps(payload, ensure_ascii=False), flush=True)
     except Exception:
         # Avoid breaking request handling due to logging failures.
         pass
