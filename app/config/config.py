@@ -50,3 +50,12 @@ def get_cors_config():
             "X-Requested-With",
         ],
     }
+
+
+def get_kurkarten_config():
+    return {
+        "kennung": os.getenv("KURKARTEN_KENNUNG"),
+        "passwort": os.getenv("KURKARTEN_PASSWORT"),
+        "ort": os.getenv("KURKARTEN_ORT"),
+        "hotel": os.getenv("KURKARTEN_HOTEL"),
+    }
