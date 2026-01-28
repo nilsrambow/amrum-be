@@ -1,10 +1,38 @@
 import datetime
+import re
 from typing import Optional, List
 from sqlalchemy.orm import Session
+import httpx
 
 from app.models import Booking, Guest
 from app.services.communication_service import CommunicationService
 from app.services.booking_status_service import BookingStatusService
+from app.config.config import get_kurkarten_config
+
+
+def extract_url_group_from_html(html: str, pattern: str) -> str:
+    """
+    Extract URL from HTML using a regex pattern.
+    
+    Args:
+        html: HTML string to search
+        pattern: Regex pattern with a capturing group for the URL
+        
+    Returns:
+        The extracted URL string
+        
+    Raises:
+        ValueError: If the URL pattern is not found in the HTML
+    """
+    match = re.search(pattern, html)
+    if not match:
+        raise ValueError(f"URL pattern not found in HTML response")
+    
+    # Return the first capturing group (the URL)
+    if match.groups():
+        return match.group(1)
+    else:
+        raise ValueError("Regex pattern must contain a capturing group for the URL")
 
 
 class KurkartenService:
@@ -48,7 +76,7 @@ class KurkartenService:
         ).all()
     
     def send_kurkarten_request_email(self, booking_id: int) -> bool:
-        """Send kurkarten request email with dummy URL 25 days before arrival."""
+        """Send kurkarten request email with real URL fetched from external service 25 days before arrival."""
         booking = self.db.query(Booking).filter(Booking.id == booking_id).first()
         if not booking:
             return False
@@ -57,8 +85,12 @@ class KurkartenService:
         if not guest:
             return False
         
-        # TODO: Fetch real kurkarten URL from external service and use instead of dummy
-        kurkarten_url = self.dummy_kurkarten_url  # This will be replaced with real URL fetch
+        # Fetch real kurkarten URL from external service
+        try:
+            kurkarten_url = self._fetch_kurkarten_url(guest.email)
+        except Exception as e:
+            print(f"Failed to fetch kurkarten URL for booking {booking_id}: {e}")
+            return False
         
         context = {
             "guest_name": f"{guest.first_name} {guest.last_name}",
@@ -167,6 +199,81 @@ class KurkartenService:
             )
         except Exception as e:
             print(f"Failed to send agent reminder: {e}")
+    
+    def _fetch_kurkarten_url(self, guest_email: str) -> str:
+        """
+        Fetch kurkarten URL from external AVS service.
+        
+        Args:
+            guest_email: Email address of the guest
+            
+        Returns:
+            The kurkarten URL string
+            
+        Raises:
+            Exception: If URL fetching fails (network error, authentication failure, etc.)
+        """
+        config = get_kurkarten_config()
+        
+        # Validate that all required config values are present
+        if not all([config.get("kennung"), config.get("passwort"), config.get("ort"), config.get("hotel")]):
+            raise ValueError("Missing required kurkarten configuration. Please set KURKARTEN_KENNUNG, KURKARTEN_PASSWORT, KURKARTEN_ORT, and KURKARTEN_HOTEL environment variables.")
+        
+        base_url = "https://meldeschein.avs.de"
+        login_url = f"{base_url}/amrum/login.do"
+        form_action_url = f"{base_url}/amrum/createGastlink.do"
+        
+        login_data = {
+            "event": "verifyLogin",
+            "target": "success",
+            "kennung": config["kennung"],
+            "passwort": config["passwort"],
+            "ort": config["ort"],
+            "hotel": config["hotel"],
+        }
+        
+        form_data = {
+            "event": "Submit",
+            "value(GastEmail)": guest_email,
+            "value(ObjektBezeichnung)": "Brodersen-153031",
+            "value(ObjektId)": "412",
+            "value(hiddenFirmaName)": "Brodersen, Nils-153031",
+            "value(hiddenFirmaId)": "387",
+        }
+        
+        # Configure timeouts: connect (5s), read (30s), write (10s)
+        # This ensures we wait long enough for the external API to respond
+        timeout = httpx.Timeout(
+            connect=5.0,  # Time to establish connection
+            read=30.0,     # Time to read response data (allows for slow API responses)
+            write=10.0,    # Time to write request data
+            pool=5.0       # Time to get connection from pool
+        )
+        
+        try:
+            with httpx.Client(timeout=timeout, follow_redirects=True) as client:
+                # Authenticate with the service
+                login_response = client.post(login_url, data=login_data)
+                login_response.raise_for_status()
+                
+                # Create guest link
+                form_response = client.post(form_action_url, data=form_data)
+                form_response.raise_for_status()
+                
+                # Extract URL from response HTML
+                html_string = form_response.text
+                match_string = r"copyToClipboard\('(?P<url>https://meldeschein\.avs\.de/precheckin/index\.xhtml\?hash=[a-f0-9]+)'\)"
+                kurkarten_url = extract_url_group_from_html(html_string, match_string)
+                
+                return kurkarten_url
+        except httpx.TimeoutException as e:
+            raise Exception(f"Timeout while fetching kurkarten URL: {e}. The external service may be slow or unavailable.")
+        except httpx.HTTPError as e:
+            raise Exception(f"HTTP error while fetching kurkarten URL: {e}")
+        except ValueError as e:
+            raise Exception(f"Failed to extract kurkarten URL from response: {e}")
+        except Exception as e:
+            raise Exception(f"Unexpected error while fetching kurkarten URL: {e}")
     
     def check_and_send_kurkarten_emails(self) -> int:
         """Check for bookings that need kurkarten emails (25 days before arrival)."""

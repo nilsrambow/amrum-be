@@ -34,16 +34,13 @@ def get_rate_limit_config():
 
 
 def get_cors_config():
-    """Get CORS configuration - hardcoded values."""
+    raw = os.getenv("CORS_ALLOWED_ORIGINS")
+    allowed_origins = [o.strip() for o in raw.split(",")] if raw else []
+    allowed_origins = [o for o in allowed_origins if o]
+    if not allowed_origins:
+        print("No CORS_ALLOWED_ORIGINS found in environment variables")
     return {
-        "allow_origins": [
-            "http://homeserver.lan:7000",
-            "https://homeserver.lan:7000",
-            "http://192.168.178.42:7000",
-            "https://192.168.178.42:7000",
-            "https://rambow09.dedyn.io",
-            "http://rambow09.dedyn.io",
-        ],
+        "allow_origins": allowed_origins,
         "allow_credentials": False,
         "allow_methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         "allow_headers": [
@@ -54,4 +51,13 @@ def get_cors_config():
             "Content-Language",
             "X-Requested-With",
         ],
+    }
+
+
+def get_kurkarten_config():
+    return {
+        "kennung": os.getenv("KURKARTEN_KENNUNG"),
+        "passwort": os.getenv("KURKARTEN_PASSWORT"),
+        "ort": os.getenv("KURKARTEN_ORT"),
+        "hotel": os.getenv("KURKARTEN_HOTEL"),
     }

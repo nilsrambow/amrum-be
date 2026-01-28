@@ -11,7 +11,6 @@ from app.api.routes import booking_router, guest_router, admin_router, alert_rou
 from app.config.config import get_rate_limit_config, get_cors_config
 from app.services.scheduler_service import scheduler_service
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
@@ -92,7 +91,7 @@ async def rate_limit_middleware(request: Request, call_next):
     
     # Add current request
     request_counts[client_ip].append(now)
-    
+
     # Process request
     response = await call_next(request)
     return response

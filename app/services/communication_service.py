@@ -1,3 +1,4 @@
+import os
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -75,16 +76,18 @@ class CommunicationService:
         # Attach HTML content
         message.attach(MIMEText(html_content, "html"))
 
-        # print instead of send_message
-        # if env == "development":
-        #     print("\n----- DEV MODE: EMAIL NOT ACTUALLY SENT -----")
-        #     print(f"From: {message['From']}")
-        #     print(f"To: {message['To']}")
-        #     print(f"Subject: {message['Subject']}")
-        #     print(f"\nBody:\n{html_content}")
-        #     print("-----------------------------------------\n")
+        # Check if real emails should be sent (defaults to False for safety)
+        # Set SEND_REAL_EMAILS=true in .env file to actually send emails
+        send_real_emails = os.getenv("SEND_REAL_EMAILS", "false").lower() == "true"
+        if not send_real_emails:
+            print("\n----- DEV MODE: EMAIL NOT ACTUALLY SENT -----")
+            print(f"From: {message['From']}")
+            print(f"To: {message['To']}")
+            print(f"Subject: {message['Subject']}")
+            print(f"\nBody:\n{html_content}")
+            print("-----------------------------------------\n")
 
-        #     return True
+            return True
 
         # Send email
         with smtplib.SMTP(
