@@ -44,11 +44,9 @@ EXPOSE 8000
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
-
-# Create startup script
-RUN echo '#!/bin/bash\n\
-echo "Starting application..."\n\
-python main.py' > /app/start.sh && chmod +x /app/start.sh
+ENV CORS_ALLOWED_ORIGINS=http://homeserver.lan:7000,https://homeserver.lan:7000,http://192.168.178.42:7000,https://192.168.178.42:7000
+ENV CORS_ALLOW_CREDENTIALS=false
+ENV CORS_ALLOW_METHODS=METHODS:GET,POST,PUT,PATCH,DELETE,OPTIONS
 
 # Command to run your app
 CMD ["/app/start.sh"]
