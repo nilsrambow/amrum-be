@@ -1,17 +1,19 @@
 {% extends "base_email.html" %}
 
 {% block content %}
-<p>Hello {{ guest_name }},</p>
+<p>Hallo {{ guest_name }},</p>
 
-<p>We hope you are looking forward to your upcoming stay from {{ check_in_date }} to {{ check_out_date }}.</p>
+<p>wir hoffen, Du freust Dich auf Deinen bevorstehenden Aufenthalt vom {{ check_in_date }} bis zum {{ check_out_date }}.</p>
 
 <div class="highlight">
-    <p><strong>Kurkarten (Tourist Card) Information Required</strong></p>
-    <p>Please provide your tourist card information using the link below:</p>
-    <p><a href="{{ kurkarten_url }}" class="button">Provide Kurkarten Information</a></p>
+
+    <p>LiebR {{ guest_name }},</p>
+    <p>für Deinen kommenden Besuch auf Amrum benötigen Du und alle Mitreisenden eine Kurkarte. Die dafür notwendigen Angaben müsstest Du bitte unter diesem Link</p>
+
+
+    <p><a href="{{ kurkarten_url }}" class="button">Kurkarten-Daten eintragen</a></p>
 </div>
-
-<p>This information is required for your stay and helps us process your tourist tax.</p>
-
-<p>If you have any questions, please don't hesitate to contact us.</p>
-{% endblock %} 
+ <p>Es wäre sonders toll, wenn Du mir danach eine kurze Rückmeldung gibst, und dazu sagst, wer Kind und wer Erwachsener ist.</p>
+    <p>Die Kurkarten bekommst Du dann etwa drei Tage vor Anreise per Mail zugeschickt.</p>
+    <p>Viele Grüße<br>Svenja, Gunnar, Jochen, Ingo und Nils vom Haus B</p>
+    {% endblock %} 

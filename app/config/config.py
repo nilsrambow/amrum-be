@@ -34,7 +34,9 @@ def get_rate_limit_config():
 
 
 def get_cors_config():
-    allowed_origins = os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if os.getenv("CORS_ALLOWED_ORIGINS") else []
+    raw = os.getenv("CORS_ALLOWED_ORIGINS")
+    allowed_origins = [o.strip() for o in raw.split(",")] if raw else []
+    allowed_origins = [o for o in allowed_origins if o]
     if not allowed_origins:
         print("No CORS_ALLOWED_ORIGINS found in environment variables")
     return {
