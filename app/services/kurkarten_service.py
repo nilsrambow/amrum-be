@@ -41,7 +41,7 @@ class KurkartenService:
         self.communication_service = communication_service
         self.status_service = BookingStatusService(db)
         self.dummy_kurkarten_url = "https://example.com/kurkarten-placeholder"
-        self.agent_email = "booking-agent@example.com"  # Configure this
+        self.agent_email = "hausb@mailbox.org"
     
     @classmethod
     def get_kurkarten_delay_days(cls) -> int:

@@ -340,14 +340,6 @@ class InvoiceService:
                 context=context
             )
 
-            # Send copy to agent
-            self.communication_service.send_email(
-                recipient=self.agent_email,
-                subject=f"Invoice Sent - {invoice_id}",
-                template_name="invoice_agent_copy",
-                context=context
-            )
-
             return True
         except Exception as e:
             print(f"Failed to send invoice email: {e}")

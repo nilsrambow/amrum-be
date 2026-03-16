@@ -71,7 +71,7 @@ class CommunicationService:
         message = MIMEMultipart()
         message["From"] = self.email_config["sender"]
         message["To"] = recipient
-        message["Bcc"] = "nibro@posteo.de"
+        message["Cc"] = "hausb@mailbox.org"
         message["Subject"] = subject
 
         # Attach HTML content
