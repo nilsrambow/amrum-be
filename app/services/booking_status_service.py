@@ -109,8 +109,7 @@ class BookingStatusService:
     
     def update_status_on_payment_received(self, booking: Booking) -> BookingStatus:
         """Update status when payment is received."""
-        # Check if we're in post-departure phase
-        if booking.check_out < datetime.date.today():
+        if booking.check_out < datetime.date.today() and booking.paid:
             booking.status = BookingStatus.DEPARTED_DONE
             booking.modified_at = datetime.datetime.utcnow()
             self.db.commit()

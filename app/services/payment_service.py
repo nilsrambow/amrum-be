@@ -1,9 +1,11 @@
 from typing import List, Optional
 from sqlalchemy.orm import Session
 
-from app.models import Payment, Booking
+from app.models import Payment, Booking, BookingStatus
 from app.schemas import PaymentCreate
 from app.services.booking_status_service import BookingStatusService
+from app.services.invoice_service import InvoiceService
+from app.services.meter_service import MeterService
 
 
 class PaymentService:
@@ -17,9 +19,15 @@ class PaymentService:
         self.db.commit()
         self.db.refresh(payment)
         
-        # Update booking status when payment is registered
         booking = self.db.query(Booking).filter(Booking.id == payment.booking_id).first()
-        if booking:
+        if booking and booking.status == BookingStatus.DEPARTED_PAYMENT_DUE:
+            meter_service = MeterService(self.db)
+            invoice_service = InvoiceService(self.db, None, meter_service)
+            invoice_total = invoice_service.get_invoice_total(booking)
+            total_paid = self.get_total_paid(booking.id)
+            if total_paid >= invoice_total:
+                booking.paid = True
+                self.db.commit()
             status_service = BookingStatusService(self.db)
             status_service.update_status_on_payment_received(booking)
         

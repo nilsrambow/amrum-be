@@ -111,6 +111,11 @@ class InvoiceService:
             'consumption': invoice_data['consumption']
         }
     
+    def get_invoice_total(self, booking: Booking) -> float:
+        """Calculate the total invoice amount for a booking."""
+        amounts = self._calculate_invoice_amounts(booking)
+        return amounts['total_cost']
+
     def _calculate_invoice_amounts(self, booking: Booking) -> dict:
         """Calculate all amounts for the invoice."""
         consumption = self.meter_service.get_consumption_summary(booking.id)
