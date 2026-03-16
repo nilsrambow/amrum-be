@@ -54,6 +54,13 @@ def get_cors_config():
     }
 
 
+def get_payment_config():
+    return {
+        "account_holder": os.getenv("PAYMENT_ACCOUNT_HOLDER"),
+        "iban": os.getenv("PAYMENT_IBAN"),
+    }
+
+
 def get_kurkarten_config():
     return {
         "kennung": os.getenv("KURKARTEN_KENNUNG"),

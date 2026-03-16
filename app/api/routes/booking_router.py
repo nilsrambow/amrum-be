@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.booking_repository import BookingRepository
-from app.config.config import get_email_config
+from app.config.config import get_email_config, get_payment_config
 from app.database import get_db
 from app.guest_repository import GuestRepository
 from app.schemas import (
@@ -60,9 +60,10 @@ def get_payment_service(db: Session = Depends(get_db)):
 def get_invoice_service(
     db: Session = Depends(get_db),
     communication_service: CommunicationService = Depends(get_communication_service),
-    meter_service: MeterService = Depends(get_meter_service)
+    meter_service: MeterService = Depends(get_meter_service),
+    payment_config=Depends(get_payment_config)
 ):
-    return InvoiceService(db, communication_service, meter_service)
+    return InvoiceService(db, communication_service, meter_service, payment_config)
 
 
 @router.post("/bookings", response_model=BookingResponse)

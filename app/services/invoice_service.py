@@ -10,11 +10,12 @@ from app.services.booking_status_service import BookingStatusService
 
 
 class InvoiceService:
-    def __init__(self, db: Session, communication_service: CommunicationService, meter_service: MeterService):
+    def __init__(self, db: Session, communication_service: CommunicationService, meter_service: MeterService, payment_config: dict = None):
         self.db = db
         self.communication_service = communication_service
         self.meter_service = meter_service
         self.agent_email = "booking-agent@example.com"  # Configure this
+        self.payment_config = payment_config or {}
     
     @classmethod
     def get_invoice_delay_days(cls) -> int:
@@ -325,9 +326,11 @@ class InvoiceService:
             "total_cost": format_currency(invoice_data['total_cost']),
             "consumption": invoice_data['consumption'],
             "sent_date": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M"),
-            "subject": f"Invoice {invoice_id}"
+            "subject": f"Invoice {invoice_id}",
+            "payment_account_holder": self.payment_config.get("account_holder"),
+            "payment_iban": self.payment_config.get("iban"),
         }
-        
+
         try:
             # Send to guest
             self.communication_service.send_email(
@@ -336,7 +339,7 @@ class InvoiceService:
                 template_name="invoice_email",
                 context=context
             )
-            
+
             # Send copy to agent
             self.communication_service.send_email(
                 recipient=self.agent_email,
@@ -344,8 +347,8 @@ class InvoiceService:
                 template_name="invoice_agent_copy",
                 context=context
             )
-            
+
             return True
         except Exception as e:
             print(f"Failed to send invoice email: {e}")
-            return False 
+            return False
