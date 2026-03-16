@@ -9,10 +9,10 @@ from app.config.config import env
 
 
 class CommunicationService:
-    def __init__(self, email_config, templates_dir="templates", base_url="http://localhost:8080"):
+    def __init__(self, email_config, templates_dir="templates", base_url=None):
         self.email_config = email_config
         self.template_env = Environment(loader=FileSystemLoader(templates_dir))
-        self.base_url = base_url
+        self.base_url = base_url or os.getenv("FRONTEND_BASE_URL", "http://localhost:8080")
 
     def generate_magic_link(self, token: str) -> str:
         """Generate a magic link for guest access"""
@@ -96,7 +96,9 @@ class CommunicationService:
         ) as server:
             server.starttls()
             server.login(self.email_config["username"], self.email_config["password"])
-            server.send_message(message)
+            refused = server.send_message(message)
+            if refused:
+                print(f"WARNING: Some recipients were refused by SMTP server: {refused}")
 
         # Log the communication (could be expanded to database logging)
         self._log_communication(recipient, template_name, "email", "sent")
