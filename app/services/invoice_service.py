@@ -326,16 +326,17 @@ class InvoiceService:
             "total_cost": format_currency(invoice_data['total_cost']),
             "consumption": invoice_data['consumption'],
             "sent_date": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M"),
-            "subject": f"Invoice {invoice_id}",
             "payment_account_holder": self.payment_config.get("account_holder"),
             "payment_iban": self.payment_config.get("iban"),
         }
+
+        subject = f"Haus B: Abrechnung vom {booking.check_in.strftime('%d. %m.')} bis {booking.check_out.strftime('%d. %m.')}"
 
         try:
             # Send to guest
             self.communication_service.send_email(
                 recipient=guest.email,
-                subject=f"Invoice {invoice_id}",
+                subject=subject,
                 template_name="invoice_email",
                 context=context
             )
