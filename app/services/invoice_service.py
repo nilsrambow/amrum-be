@@ -14,7 +14,7 @@ class InvoiceService:
         self.db = db
         self.communication_service = communication_service
         self.meter_service = meter_service
-        self.agent_email = "booking-agent@example.com"  # Configure this
+        self.agent_email = "hausb@mailbox.org"
         self.payment_config = payment_config or {}
     
     @classmethod
