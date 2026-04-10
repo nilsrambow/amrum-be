@@ -62,3 +62,4 @@ services:
 
 volumes:
   prod_postgres_data:
+    name: amrum-be_prod_postgres_data # amrum-be_prod_postgres_data  # explicit name — not tied to run directory
