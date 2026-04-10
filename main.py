@@ -1,9 +1,15 @@
 import asyncio
+import logging
 from contextlib import asynccontextmanager
 from collections import defaultdict
 from datetime import datetime, timedelta
 
 import uvicorn
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(levelname)s:     %(name)s - %(message)s",
+)
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
