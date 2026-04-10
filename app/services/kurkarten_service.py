@@ -269,7 +269,7 @@ class KurkartenService:
 
                 # Step 3: extract URL from HTML
                 html_string = form_response.text
-                match_string = r"copyToClipboard\('(?P<url>https://meldeschein\.avs\.de/precheckin/index\.xhtml\?hash=[a-f0-9]+)'\)"
+                match_string = r"(https://selfcheck-in-meldeschein\.avs\.de/\?hash=[a-f0-9]+)"
                 logger.info("Kurkarten: searching for URL pattern in HTML (%d chars)", len(html_string))
 
                 try:
