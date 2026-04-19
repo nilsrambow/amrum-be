@@ -1,6 +1,9 @@
+import logging
 import os
 
 from dotenv import find_dotenv, load_dotenv
+
+logger = logging.getLogger(__name__)
 
 # Find the correct .env file based on the current environment
 env = os.getenv("ENV", "development")
@@ -38,7 +41,7 @@ def get_cors_config():
     allowed_origins = [o.strip() for o in raw.split(",")] if raw else []
     allowed_origins = [o for o in allowed_origins if o]
     if not allowed_origins:
-        print("No CORS_ALLOWED_ORIGINS found in environment variables")
+        logger.warning("No CORS_ALLOWED_ORIGINS found in environment variables")
     return {
         "allow_origins": allowed_origins,
         "allow_credentials": False,

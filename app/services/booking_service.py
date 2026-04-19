@@ -1,6 +1,9 @@
+import logging
 from datetime import datetime, date, timedelta
 
 from app.booking_repository import BookingRepository
+
+logger = logging.getLogger(__name__)
 from app.guest_repository import GuestRepository
 from app.schemas import BookingCreate, BookingUpdate, BookingPartialUpdate
 from app.services.communication_service import CommunicationService
@@ -264,7 +267,7 @@ class BookingService:
                 self.confirm_booking(booking.id)
                 confirmed_count += 1
             except Exception as e:
-                print(f"Failed to confirm booking {booking.id}: {e}")
+                logger.error("Failed to confirm booking %d: %s", booking.id, e, exc_info=True)
         
         return confirmed_count
 

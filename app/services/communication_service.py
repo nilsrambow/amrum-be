@@ -1,3 +1,4 @@
+import logging
 import os
 import smtplib
 from email.mime.multipart import MIMEMultipart
@@ -6,6 +7,8 @@ from email.mime.text import MIMEText
 from jinja2 import Environment, FileSystemLoader
 
 from app.config.config import env
+
+logger = logging.getLogger(__name__)
 
 
 class CommunicationService:
@@ -81,13 +84,10 @@ class CommunicationService:
         # Set SEND_REAL_EMAILS=true in .env file to actually send emails
         send_real_emails = os.getenv("SEND_REAL_EMAILS", "false").lower() == "true"
         if not send_real_emails:
-            print("\n----- DEV MODE: EMAIL NOT ACTUALLY SENT -----")
-            print(f"From: {message['From']}")
-            print(f"To: {message['To']}")
-            print(f"Subject: {message['Subject']}")
-            print(f"\nBody:\n{html_content}")
-            print("-----------------------------------------\n")
-
+            logger.info(
+                "DEV MODE - email not sent | from=%s to=%s subject=%s body=%s",
+                message["From"], message["To"], message["Subject"], html_content,
+            )
             return True
 
         # Send email
@@ -98,14 +98,11 @@ class CommunicationService:
             server.login(self.email_config["username"], self.email_config["password"])
             refused = server.send_message(message)
             if refused:
-                print(f"WARNING: Some recipients were refused by SMTP server: {refused}")
+                logger.warning("Some recipients were refused by SMTP server: %s", refused)
 
         # Log the communication (could be expanded to database logging)
         self._log_communication(recipient, template_name, "email", "sent")
 
     def _log_communication(self, recipient, template_type, channel, status):
         """Log communication details."""
-        # This could write to a database table in a full implementation
-        print(
-            f"Communication sent: {template_type} to {recipient} via {channel}: {status}"
-        )
+        logger.info("Communication sent: %s to %s via %s: %s", template_type, recipient, channel, status)

@@ -10,6 +10,8 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(levelname)s:     %(name)s - %(message)s",
 )
+
+logger = logging.getLogger(__name__)
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -20,13 +22,13 @@ from app.services.scheduler_service import scheduler_service
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    print("Starting scheduler service...")
+    logger.info("Starting scheduler service...")
     scheduler_task = asyncio.create_task(scheduler_service.start_scheduler())
 
     yield
 
     # Shutdown
-    print("Stopping scheduler service...")
+    logger.info("Stopping scheduler service...")
     scheduler_service.stop_scheduler()
     scheduler_task.cancel()
     try:

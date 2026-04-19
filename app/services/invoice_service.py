@@ -1,7 +1,10 @@
 import datetime
+import logging
 import uuid
 from typing import Optional, List
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 from app.models import Booking, UnitPrice, MeterReading, PriceType
 from app.services.communication_service import CommunicationService
@@ -154,7 +157,27 @@ class InvoiceService:
         
         # Tourist tax
         kurtaxe_cost = booking.kurtaxe_amount or 0
-        
+
+        total_cost = accommodation_cost + electricity_cost + gas_cost + firewood_cost + kurtaxe_cost
+
+        logger.info(
+            "Invoice calculation for booking %d (%s to %s, %d nights): "
+            "accommodation=%.2f EUR (%d nights @ %.2f), "
+            "electricity=%.2f EUR (%.2f kWh @ %.4f), "
+            "gas=%.2f EUR (%.2f kWh @ %.4f per kWh), "
+            "firewood=%.2f EUR (%s boxes @ %.2f), "
+            "kurtaxe=%.2f EUR, "
+            "total=%.2f EUR",
+            booking.id,
+            booking.check_in, booking.check_out, num_days,
+            accommodation_cost, num_days, stay_rate or 0,
+            electricity_cost, consumption.get("electricity_kwh", 0), elec_rate or 0,
+            gas_cost, consumption.get("gas_kwh", 0), (gas_rate / 10.5) if gas_rate else 0,
+            firewood_cost, consumption.get("firewood_boxes", 0), firewood_rate or 0,
+            kurtaxe_cost,
+            total_cost,
+        )
+
         return {
             'accommodation_cost': accommodation_cost,
             'stay_rate': stay_rate,
@@ -165,7 +188,7 @@ class InvoiceService:
             'firewood_cost': firewood_cost,
             'firewood_rate': firewood_rate,
             'kurtaxe_cost': kurtaxe_cost,
-            'total_cost': accommodation_cost + electricity_cost + gas_cost + firewood_cost + kurtaxe_cost,
+            'total_cost': total_cost,
             'consumption': consumption,
             'num_days': num_days
         }
@@ -193,8 +216,8 @@ class InvoiceService:
         # - Unit prices
         # - Total amounts
         
-        print(f"Generated invoice PDF: {pdf_path}")
-        print(f"Invoice data: {invoice_data}")
+        logger.info("Generated invoice PDF: %s", pdf_path)
+        logger.debug("Invoice data: %s", invoice_data)
         
         return pdf_path
     
@@ -245,7 +268,7 @@ class InvoiceService:
             
             return True
         except Exception as e:
-            print(f"Failed to send invoice email: {e}")
+            logger.error("Failed to send invoice email: %s", e, exc_info=True)
             return False
     
     def _send_missing_readings_reminder(self, booking: Booking):
@@ -348,5 +371,5 @@ class InvoiceService:
 
             return True
         except Exception as e:
-            print(f"Failed to send invoice email: {e}")
+            logger.error("Failed to send invoice email: %s", e, exc_info=True)
             return False
