@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
-from app.models import Booking, UnitPrice, MeterReading, PriceType
+from app.models import Booking, UnitPrice, MeterReading, PriceType, InvoiceSnapshot
 from app.services.communication_service import CommunicationService
 from app.services.meter_service import MeterService
 from app.services.booking_status_service import BookingStatusService
@@ -52,17 +52,20 @@ class InvoiceService:
         
         # Calculate invoice amounts
         invoice_data = self._calculate_invoice_amounts(booking)
-        
+
+        # Persist snapshot before marking invoice as created
+        self._persist_invoice_snapshot(booking, invoice_data)
+
         # Generate PDF (placeholder for now)
         pdf_path = self._generate_invoice_pdf(booking, invoice_data, invoice_id)
-        
+
         # Update booking with invoice information
         booking.invoice_id = invoice_id
         booking.invoice_created = True
         booking.invoice_sent = False  # Not sent yet
         booking.invoice_sent_date = None
         self.db.commit()
-        
+
         return invoice_id
 
     def generate_invoice_data(self, booking_id: int) -> Optional[dict]:
@@ -77,7 +80,10 @@ class InvoiceService:
         
         # Calculate invoice amounts
         invoice_data = self._calculate_invoice_amounts(booking)
-        
+
+        # Persist snapshot (always overwrite so amounts stay in sync with the generation moment)
+        self._persist_invoice_snapshot(booking, invoice_data)
+
         # Generate invoice ID if not exists
         if not booking.invoice_id:
             invoice_id = f"INV-{booking.id}-{datetime.datetime.utcnow().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8]}"
@@ -86,7 +92,7 @@ class InvoiceService:
             booking.invoice_sent = False
             booking.invoice_sent_date = None
             self.db.commit()
-            
+
             # Update booking status when invoice is created
             status_service = BookingStatusService(self.db)
             status_service.update_status_on_invoice_created(booking)
@@ -193,6 +199,55 @@ class InvoiceService:
             'num_days': num_days
         }
     
+    def _persist_invoice_snapshot(self, booking: Booking, invoice_data: dict) -> None:
+        """Save calculated invoice amounts to the database."""
+        consumption = invoice_data.get('consumption', {})
+        existing = self.db.query(InvoiceSnapshot).filter(InvoiceSnapshot.booking_id == booking.id).first()
+        if existing:
+            snapshot = existing
+        else:
+            snapshot = InvoiceSnapshot(booking_id=booking.id)
+            self.db.add(snapshot)
+
+        snapshot.num_days = invoice_data['num_days']
+        snapshot.stay_rate = invoice_data.get('stay_rate')
+        snapshot.accommodation_cost = invoice_data.get('accommodation_cost', 0)
+        snapshot.electricity_kwh = consumption.get('electricity_kwh')
+        snapshot.elec_rate = invoice_data.get('elec_rate')
+        snapshot.electricity_cost = invoice_data.get('electricity_cost', 0)
+        snapshot.gas_kwh = consumption.get('gas_kwh')
+        snapshot.gas_cubic_meters = consumption.get('gas_cubic_meters')
+        snapshot.gas_rate = invoice_data.get('gas_rate')
+        snapshot.gas_cost = invoice_data.get('gas_cost', 0)
+        snapshot.firewood_boxes = consumption.get('firewood_boxes')
+        snapshot.firewood_rate = invoice_data.get('firewood_rate')
+        snapshot.firewood_cost = invoice_data.get('firewood_cost', 0)
+        snapshot.kurtaxe_cost = invoice_data.get('kurtaxe_cost', 0)
+        snapshot.total_cost = invoice_data.get('total_cost', 0)
+        self.db.commit()
+
+    def _invoice_data_from_snapshot(self, snapshot: InvoiceSnapshot) -> dict:
+        """Reconstruct the invoice_data dict from a persisted snapshot."""
+        return {
+            'num_days': snapshot.num_days,
+            'stay_rate': snapshot.stay_rate,
+            'accommodation_cost': snapshot.accommodation_cost,
+            'elec_rate': snapshot.elec_rate,
+            'electricity_cost': snapshot.electricity_cost,
+            'gas_rate': snapshot.gas_rate,
+            'gas_cost': snapshot.gas_cost,
+            'firewood_rate': snapshot.firewood_rate,
+            'firewood_cost': snapshot.firewood_cost,
+            'kurtaxe_cost': snapshot.kurtaxe_cost,
+            'total_cost': snapshot.total_cost,
+            'consumption': {
+                'electricity_kwh': snapshot.electricity_kwh,
+                'gas_kwh': snapshot.gas_kwh,
+                'gas_cubic_meters': snapshot.gas_cubic_meters,
+                'firewood_boxes': snapshot.firewood_boxes,
+            },
+        }
+
     def _get_unit_price(self, price_type: PriceType, date: datetime.date) -> Optional[float]:
         """Get unit price for a specific type and date."""
         price = self.db.query(UnitPrice).filter(
@@ -313,10 +368,13 @@ class InvoiceService:
         # Check if invoice has been generated
         if not booking.invoice_id or not booking.invoice_created:
             raise ValueError("Invoice has not been generated yet. Please generate invoice first.")
-        
-        # Calculate invoice amounts for email
-        invoice_data = self._calculate_invoice_amounts(booking)
-        
+
+        # Load persisted snapshot — never recalculate at send time
+        snapshot = self.db.query(InvoiceSnapshot).filter(InvoiceSnapshot.booking_id == booking_id).first()
+        if not snapshot:
+            raise ValueError("Invoice snapshot not found. Please regenerate the invoice.")
+        invoice_data = self._invoice_data_from_snapshot(snapshot)
+
         # Send invoice email
         success = self._send_invoice_email_only(booking, booking.invoice_id, invoice_data)
         

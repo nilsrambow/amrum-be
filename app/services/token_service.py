@@ -72,13 +72,12 @@ class TokenService:
         # Build guest name
         guest_name = f"{booking.guest.first_name} {booking.guest.last_name}"
         
-        # Get invoice details if available
+        # Get invoice details from persisted snapshot if available
         invoice_details = None
-        if booking.invoice_created:
-            # Import here to avoid circular imports
+        if booking.invoice_created and booking.invoice_snapshot:
             from app.services.invoice_service import InvoiceService
-            invoice_service = InvoiceService(self.db)
-            invoice_details = invoice_service.calculate_invoice_details(booking.id)
+            invoice_service = InvoiceService(self.db, None, None)
+            invoice_details = invoice_service._invoice_data_from_snapshot(booking.invoice_snapshot)
         
         return GuestBookingResponse(
             id=booking.id,

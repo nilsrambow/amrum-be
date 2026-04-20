@@ -113,31 +113,31 @@ class BookingService:
         # Update status
         self.status_service.update_booking_status(booking)
         
-        # Calculate invoice details
+        # Attach invoice details: use persisted snapshot if invoice was generated,
+        # otherwise calculate on-the-fly for preview purposes only.
         from app.services.invoice_service import InvoiceService
         from app.services.meter_service import MeterService
-        from app.config.config import get_email_config
-        
-        # Create temporary services for calculation
-        email_config = get_email_config()
-        meter_service = MeterService(self.booking_repository.db)
-        invoice_service = InvoiceService(self.booking_repository.db, None, meter_service)
-        
-        try:
-            invoice_data = invoice_service._calculate_invoice_amounts(booking)
-            booking.invoice_details = invoice_data
-        except Exception as e:
-            # If invoice calculation fails, set empty details
-            booking.invoice_details = {
-                'accommodation_cost': 0,
-                'electricity_cost': 0,
-                'gas_cost': 0,
-                'firewood_cost': 0,
-                'kurtaxe_cost': 0,
-                'total_cost': 0,
-                'consumption': {},
-                'num_days': (booking.check_out - booking.check_in).days
-            }
+        from app.models import InvoiceSnapshot
+
+        if booking.invoice_created and booking.invoice_snapshot:
+            invoice_service = InvoiceService(self.booking_repository.db, None, None)
+            booking.invoice_details = invoice_service._invoice_data_from_snapshot(booking.invoice_snapshot)
+        else:
+            meter_service = MeterService(self.booking_repository.db)
+            invoice_service = InvoiceService(self.booking_repository.db, None, meter_service)
+            try:
+                booking.invoice_details = invoice_service._calculate_invoice_amounts(booking)
+            except Exception:
+                booking.invoice_details = {
+                    'accommodation_cost': 0,
+                    'electricity_cost': 0,
+                    'gas_cost': 0,
+                    'firewood_cost': 0,
+                    'kurtaxe_cost': 0,
+                    'total_cost': 0,
+                    'consumption': {},
+                    'num_days': (booking.check_out - booking.check_in).days
+                }
         
         return booking
 

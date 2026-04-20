@@ -76,6 +76,7 @@ class Booking(Base):
     guest = relationship("Guest", back_populates="bookings")
     meter_readings = relationship("MeterReading", back_populates="booking", uselist=False)
     payments = relationship("Payment", back_populates="booking")
+    invoice_snapshot = relationship("InvoiceSnapshot", back_populates="booking", uselist=False)
 
 
 class BookingToken(Base):
@@ -167,6 +168,37 @@ class UnitPrice(Base):
     description = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     modified_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class InvoiceSnapshot(Base):
+    __tablename__ = "invoice_snapshots"
+
+    id = Column(Integer, primary_key=True, index=True)
+    booking_id = Column(Integer, ForeignKey("bookings.id"), unique=True, nullable=False)
+
+    num_days = Column(Integer, nullable=False)
+    stay_rate = Column(Float, nullable=True)
+    accommodation_cost = Column(Float, nullable=False, default=0)
+
+    electricity_kwh = Column(Float, nullable=True)
+    elec_rate = Column(Float, nullable=True)
+    electricity_cost = Column(Float, nullable=False, default=0)
+
+    gas_kwh = Column(Float, nullable=True)
+    gas_cubic_meters = Column(Float, nullable=True)
+    gas_rate = Column(Float, nullable=True)
+    gas_cost = Column(Float, nullable=False, default=0)
+
+    firewood_boxes = Column(Integer, nullable=True)
+    firewood_rate = Column(Float, nullable=True)
+    firewood_cost = Column(Float, nullable=False, default=0)
+
+    kurtaxe_cost = Column(Float, nullable=False, default=0)
+    total_cost = Column(Float, nullable=False, default=0)
+
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    booking = relationship("Booking", back_populates="invoice_snapshot")
 
 
 class AdminUser(Base):
