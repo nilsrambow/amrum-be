@@ -29,8 +29,8 @@ while  pg_isready -h postgres -p 5432 -U "$POSTGRES_USER"; do\n\
   sleep 2\n\
 done\n\
 echo "PostgreSQL is ready!"\n\
-# echo "Running database migrations..."\n\
-# alembic upgrade head\n\
+echo "Running database migrations..."\n\
+alembic upgrade head\n\
 echo "Starting application..."\n\
 exec uvicorn main:app --host 0.0.0.0 --port 8000' > /app/start.sh && \
     chmod +x /app/start.sh && \
