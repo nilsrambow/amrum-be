@@ -25,7 +25,7 @@ class GuestResponse(GuestBase):
     modified_at: datetime.datetime
 
     class Config:
-        from_attribute = True
+        from_attributes = True
 
 
 class GuestUpdate(BaseModel):
@@ -64,7 +64,7 @@ class MeterReadingResponse(MeterReadingBase):
     modified_at: datetime.datetime
 
     class Config:
-        from_attribute = True
+        from_attributes = True
 
 
 # Payment Schemas
@@ -87,7 +87,7 @@ class PaymentResponse(PaymentBase):
     modified_at: datetime.datetime
 
     class Config:
-        from_attribute = True
+        from_attributes = True
 
 
 # Unit Price Schemas - Base
@@ -106,7 +106,7 @@ class UnitPriceResponse(UnitPriceBase):
     modified_at: datetime.datetime
 
     class Config:
-        from_attribute = True
+        from_attributes = True
 
 
 # Specific Unit Price Schemas
@@ -238,7 +238,7 @@ class BookingResponse(BookingBase):
     modified_at: datetime.datetime
     
     # Relationships
-    meter_readings: Optional[MeterReadingResponse] = None
+    meter_readings: Optional[List[MeterReadingResponse]] = None
     payments: Optional[List[PaymentResponse]] = None
     
     # Invoice details (calculated)
@@ -249,7 +249,7 @@ class BookingResponse(BookingBase):
     token_expires_at: Optional[datetime.datetime] = None
 
     class Config:
-        from_attribute = True
+        from_attributes = True
 
 
 # Token Schemas
@@ -260,7 +260,7 @@ class BookingTokenResponse(BaseModel):
     last_used_at: Optional[datetime.datetime] = None
 
     class Config:
-        from_attribute = True
+        from_attributes = True
 
 
 class GuestBookingResponse(BaseModel):
@@ -279,7 +279,7 @@ class GuestBookingResponse(BaseModel):
     guest_email: str
     
     # Meter readings (if any)
-    meter_readings: Optional[MeterReadingResponse] = None
+    meter_readings: Optional[List[MeterReadingResponse]] = None
     
     # Payments (if any)
     payments: Optional[List[PaymentResponse]] = None
@@ -288,7 +288,7 @@ class GuestBookingResponse(BaseModel):
     invoice_details: Optional[dict] = None
 
     class Config:
-        from_attribute = True
+        from_attributes = True
 
 
 # Authentication Schemas
