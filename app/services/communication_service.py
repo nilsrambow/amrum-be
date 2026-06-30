@@ -19,7 +19,7 @@ class CommunicationService:
 
     def generate_magic_link(self, token: str) -> str:
         """Generate a magic link for guest access"""
-        return f"{self.base_url}/#/guest/booking/{token}"
+        return f"{self.base_url}/guest/booking/{token}"
 
     def _format_german_date(self, date_obj) -> str:
         """Format a date in German long form: Mo, 15. 07. 2024"""
