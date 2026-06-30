@@ -62,6 +62,27 @@ class CommunicationService:
             context=context
         )
 
+    def send_booking_cancellation_email(self, booking, guest):
+        """Send booking cancellation email to guest in German."""
+        def format_german_date(date_obj):
+            days = {0: 'Mo', 1: 'Di', 2: 'Mi', 3: 'Do', 4: 'Fr', 5: 'Sa', 6: 'So'}
+            return f"{days[date_obj.weekday()]}, {date_obj.strftime('%d. %m. %Y')}"
+
+        context = {
+            "guest_name": f"{guest.first_name} {guest.last_name}",
+            "check_in_formatted": format_german_date(booking.check_in),
+            "check_out_formatted": format_german_date(booking.check_out),
+        }
+
+        subject = f"Haus B: Stornierung Eurer Buchung vom {booking.check_in.strftime('%d. %m.')} bis {booking.check_out.strftime('%d. %m.')}"
+
+        self.send_email(
+            recipient=guest.email,
+            subject=subject,
+            template_name="booking_cancellation_template",
+            context=context,
+        )
+
     def send_email(self, recipient, subject, template_name, context):
         """Send an email using a template."""
         # Get the template
