@@ -3,7 +3,7 @@ import secrets
 from enum import Enum
 
 from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, String, Float, Text, Enum as SQLEnum, CheckConstraint
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 
 from app.database import Base
 
@@ -74,9 +74,9 @@ class Booking(Base):
     )
 
     guest = relationship("Guest", back_populates="bookings")
-    meter_readings = relationship("MeterReading", back_populates="booking", uselist=False)
-    payments = relationship("Payment", back_populates="booking")
-    invoice_snapshot = relationship("InvoiceSnapshot", back_populates="booking", uselist=False)
+    meter_readings = relationship("MeterReading", back_populates="booking", uselist=False, cascade="all, delete-orphan")
+    payments = relationship("Payment", back_populates="booking", cascade="all, delete-orphan")
+    invoice_snapshot = relationship("InvoiceSnapshot", back_populates="booking", uselist=False, cascade="all, delete-orphan")
 
 
 class BookingToken(Base):
@@ -90,7 +90,7 @@ class BookingToken(Base):
     last_used_at = Column(DateTime, nullable=True)
     
     # Relationship
-    booking = relationship("Booking", backref="tokens")
+    booking = relationship("Booking", backref=backref("tokens", cascade="all, delete-orphan"))
 
 
 class Guest(Base):
