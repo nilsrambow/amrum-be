@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Stornierung Buchung Haus B</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .booking-details {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #e57373;
+        }
+        .footer {
+            font-size: 12px;
+            color: #777;
+            margin-top: 30px;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Haus B: Stornierung</h1>
+    </div>
+
+    <p>Liebe/r {{ guest_name }},</p>
+
+    <p>wir möchten Euch mitteilen, dass Eure Buchung im Haus B storniert wurde:</p>
+
+    <div class="booking-details">
+        <p><strong>Anreise:</strong> {{ check_in_formatted }}</p>
+        <p><strong>Abreise:</strong> {{ check_out_formatted }}</p>
+    </div>
+
+    <p>Falls Ihr Fragen habt oder einen neuen Termin vereinbaren möchtet, meldet Euch gerne bei uns.</p>
+
+    <p>Viele Grüße<br>
+    Svenja, Gunnar, Jochen, Ingo und Nils vom Haus B</p>
+
+    <div class="footer">
+    </div>
+</body>
+</html>

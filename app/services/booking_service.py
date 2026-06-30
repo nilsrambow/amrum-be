@@ -250,6 +250,14 @@ class BookingService:
         booking = self.booking_repository.get_by_id(booking_id)
         if not booking:
             raise ValueError(f"Booking with ID {booking_id} not found")
+        guest = self.guest_repository.get_by_id(booking.guest_id)
+        if guest:
+            try:
+                self.communication_service.send_booking_cancellation_email(booking, guest)
+            except Exception as e:
+                logger.warning("Failed to send cancellation email for booking %d: %s", booking_id, e)
+        else:
+            logger.warning("No guest found for booking %d (guest_id=%s) — cancellation email skipped", booking_id, booking.guest_id)
         self.booking_repository.delete(booking)
 
     def check_and_confirm_bookings(self, auto_confirm_delay_hours: int = 36) -> int:
