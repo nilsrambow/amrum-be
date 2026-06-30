@@ -238,7 +238,7 @@ class BookingResponse(BookingBase):
     modified_at: datetime.datetime
     
     # Relationships
-    meter_readings: Optional[List[MeterReadingResponse]] = None
+    meter_readings: Optional[MeterReadingResponse] = None
     payments: Optional[List[PaymentResponse]] = None
     
     # Invoice details (calculated)
@@ -279,7 +279,7 @@ class GuestBookingResponse(BaseModel):
     guest_email: str
     
     # Meter readings (if any)
-    meter_readings: Optional[List[MeterReadingResponse]] = None
+    meter_readings: Optional[MeterReadingResponse] = None
     
     # Payments (if any)
     payments: Optional[List[PaymentResponse]] = None
