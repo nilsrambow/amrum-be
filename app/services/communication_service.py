@@ -21,40 +21,31 @@ class CommunicationService:
         """Generate a magic link for guest access"""
         return f"{self.base_url}/#/guest/booking/{token}"
 
+    def _format_german_date(self, date_obj) -> str:
+        """Format a date in German long form: Mo, 15. 07. 2024"""
+        days = {0: 'Mo', 1: 'Di', 2: 'Mi', 3: 'Do', 4: 'Fr', 5: 'Sa', 6: 'So'}
+        return f"{days[date_obj.weekday()]}, {date_obj.strftime('%d. %m. %Y')}"
+
     def send_booking_confirmation_email(self, booking, guest, token: str = None):
         """Send booking confirmation email with magic link"""
-        
-        # Format dates in German format without locale dependency
-        def format_german_date(date_obj):
-            """Format date in German format: Mo, 15. 07. 2024"""
-            # German day abbreviations
-            days = {
-                0: 'Mo', 1: 'Di', 2: 'Mi', 3: 'Do', 4: 'Fr', 5: 'Sa', 6: 'So'
-            }
-            
-            day_name = days[date_obj.weekday()]
-            return f"{day_name}, {date_obj.strftime('%d. %m. %Y')}"
-        
         context = {
             "guest_name": f"{guest.first_name} {guest.last_name}",
             "check_in": booking.check_in.strftime("%Y-%m-%d"),
             "check_out": booking.check_out.strftime("%Y-%m-%d"),
-            "check_in_formatted": format_german_date(booking.check_in),
-            "check_out_formatted": format_german_date(booking.check_out),
+            "check_in_formatted": self._format_german_date(booking.check_in),
+            "check_out_formatted": self._format_german_date(booking.check_out),
             "booking_id": booking.id
         }
-        
-        # Add magic link if token is provided
+
         if token:
             magic_link = self.generate_magic_link(token)
             context["magic_link"] = magic_link
             context["has_magic_link"] = True
         else:
             context["has_magic_link"] = False
-        
-        # Generate German subject line format
+
         subject = f"Haus B: Terminbestätigung von {booking.check_in.strftime('%d. %m.')} bis {booking.check_out.strftime('%d. %m.')}"
-        
+
         self.send_email(
             recipient=guest.email,
             subject=subject,
@@ -64,14 +55,13 @@ class CommunicationService:
 
     def send_booking_cancellation_email(self, booking, guest):
         """Send booking cancellation email to guest in German."""
-        def format_german_date(date_obj):
-            days = {0: 'Mo', 1: 'Di', 2: 'Mi', 3: 'Do', 4: 'Fr', 5: 'Sa', 6: 'So'}
-            return f"{days[date_obj.weekday()]}, {date_obj.strftime('%d. %m. %Y')}"
-
         context = {
             "guest_name": f"{guest.first_name} {guest.last_name}",
-            "check_in_formatted": format_german_date(booking.check_in),
-            "check_out_formatted": format_german_date(booking.check_out),
+            "check_in": booking.check_in.strftime("%Y-%m-%d"),
+            "check_out": booking.check_out.strftime("%Y-%m-%d"),
+            "check_in_formatted": self._format_german_date(booking.check_in),
+            "check_out_formatted": self._format_german_date(booking.check_out),
+            "booking_id": booking.id,
         }
 
         subject = f"Haus B: Stornierung Eurer Buchung vom {booking.check_in.strftime('%d. %m.')} bis {booking.check_out.strftime('%d. %m.')}"
@@ -79,7 +69,7 @@ class CommunicationService:
         self.send_email(
             recipient=guest.email,
             subject=subject,
-            template_name="booking_cancellation_template",
+            template_name="bkg_cancellation_template",
             context=context,
         )
 
@@ -123,6 +113,7 @@ class CommunicationService:
 
         # Log the communication (could be expanded to database logging)
         self._log_communication(recipient, template_name, "email", "sent")
+        return True
 
     def _log_communication(self, recipient, template_type, channel, status):
         """Log communication details."""
