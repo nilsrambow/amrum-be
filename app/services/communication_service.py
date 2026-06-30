@@ -19,7 +19,7 @@ class CommunicationService:
 
     def generate_magic_link(self, token: str) -> str:
         """Generate a magic link for guest access"""
-        return f"{self.base_url}/#/guest/booking/{token}"
+        return f"{self.base_url}/guest/booking/{token}"
 
     def send_booking_confirmation_email(self, booking, guest, token: str = None):
         """Send booking confirmation email with magic link"""

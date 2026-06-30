@@ -56,13 +56,17 @@
     
     <p>Die Kurkarten bekommt ihr ca. drei Tage vor der Anreise per EMail, automatisch vom System geschickt. Bitte sagt Bescheid, falls die Kurkarten nicht ankommen sollten.</p>
     
-    <p>Alle weiteren Infos zum Haus haben wir inzwischen online zusammen gestellt, Du findest alles unter dem folgenden Link:</p>
-    
-   ... das geht leider noch nicht. 
+    <p>Alle weiteren Infos zum Haus haben wir inzwischen online zusammen gestellt. Unter dem folgenden Link findest Du Anfahrtsbeschreibung, Zugangsinformationen, WLAN und Hausregeln — und dort könnt Ihr auch die Zählerstände bei An- und Abreise eintragen:</p>
 
-    <p>Bitte tragt in diesem Formular auch die Zählerstände bei Anreise ein.</p>
-    
-    <p>Für die Abreise gibt es auch ein entsprechendes Online Dokument - Ihr könnt die Zählerstände über den gleichen Link eingeben. Ich erstelle dann postwendend eine Übersicht über die angefallenen Unkosten.</p>
+    {% if has_magic_link %}
+    <div class="magic-link-section">
+        <p><strong>Dein persönlicher Link zum Haus:</strong></p>
+        <p><a href="{{ magic_link }}" class="button">Zur Buchungsseite</a></p>
+        <p style="font-size: 12px; color: #555;">Oder kopiere diesen Link in deinen Browser:<br>{{ magic_link }}</p>
+    </div>
+    {% endif %}
+
+    <p>Für die Abreise könnt Ihr die Zählerstände über denselben Link eingeben. Ich erstelle dann postwendend eine Übersicht über die angefallenen Unkosten.</p>
     
     <p>Bei weiteren Fragen kommt gerne direkt auf mich zu.</p>
     
