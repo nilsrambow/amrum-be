@@ -246,6 +246,12 @@ class BookingService:
         
         db.commit()
 
+    def delete_booking(self, booking_id: int) -> None:
+        booking = self.booking_repository.get_by_id(booking_id)
+        if not booking:
+            raise ValueError(f"Booking with ID {booking_id} not found")
+        self.booking_repository.delete(booking)
+
     def check_and_confirm_bookings(self, auto_confirm_delay_hours: int = 36) -> int:
         """Check for bookings that need automatic confirmation."""
         from datetime import datetime, timedelta

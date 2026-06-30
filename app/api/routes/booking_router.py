@@ -116,6 +116,18 @@ def update_booking(
         raise HTTPException(status_code=404, detail=str(e))
 
 
+@router.delete("/booking/{booking_id}", status_code=204)
+def delete_booking(
+    booking_id: int,
+    booking_service: BookingService = Depends(get_booking_service),
+    current_admin = Depends(get_current_admin)
+):
+    try:
+        booking_service.delete_booking(booking_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
 @router.patch("/booking/{booking_id}/confirm", response_model=BookingResponse)
 def confirm_booking(
     booking_id: int, 
