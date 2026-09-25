@@ -97,16 +97,20 @@ class KurkartenService:
 
         context = {
             "guest_name": f"{guest.first_name} {guest.last_name}",
-            "check_in_date": booking.check_in.strftime("%B %d, %Y"),
-            "check_out_date": booking.check_out.strftime("%B %d, %Y"),
+            "guest_first_name": guest.first_name,
+            "check_in_date": self.communication_service.format_german_date(booking.check_in),
+            "check_out_date": self.communication_service.format_german_date(booking.check_out),
             "kurkarten_url": kurkarten_url,
-            "subject": "Tourist Card Information Required"
+            "subject": (
+                f"Haus B: Kurkarten für Deinen Aufenthalt vom "
+                f"{booking.check_in.strftime('%d. %m.')} bis {booking.check_out.strftime('%d. %m.')}"
+            ),
         }
 
         try:
             self.communication_service.send_email(
                 recipient=guest.email,
-                subject="Tourist Card Information Required",
+                subject=context["subject"],
                 template_name="kurkarten_request",
                 context=context
             )
@@ -129,13 +133,12 @@ class KurkartenService:
         if not guest:
             return False
 
-        # Check if kurkarten info has been added (we assume it's added if email was sent)
-        if not booking.kurkarten_email_sent:
+        if booking.kurkarten_data_missing:
             # Send reminder to agent instead
             self._send_agent_reminder(
                 booking,
                 "Kurkarten information missing - cannot send pre-arrival email",
-                ["Kurkarten information not completed"]
+                ["Kurtaxe amount not entered"]
             )
             return False
 
@@ -144,24 +147,26 @@ class KurkartenService:
         token_service = TokenService(self.db)
         token_info = token_service.get_token_info(booking.id)
 
+        if not token_info:
+            # The mail is useless without the magic link - ask the agent to fix it
+            self._send_agent_reminder(
+                booking,
+                "Access token missing - cannot send pre-arrival email",
+                ["Access token / magic link not available"]
+            )
+            return False
+
         # Format arrival date for subject line
         arrival_date_formatted = booking.check_in.strftime('%d. %m.')
 
         context = {
             "guest_name": f"{guest.first_name} {guest.last_name}",
-            "check_in_date": booking.check_in.strftime("%B %d, %Y"),
-            "check_out_date": booking.check_out.strftime("%B %d, %Y"),
-            "kurtaxe_amount": booking.kurtaxe_amount,
+            "guest_first_name": guest.first_name,
+            "check_in_date": self.communication_service.format_german_date(booking.check_in),
+            "check_out_date": self.communication_service.format_german_date(booking.check_out),
+            "magic_link": self.communication_service.generate_magic_link(token_info.token),
             "subject": f"Haus B: Letzte Infos vor Deiner Anreise am {arrival_date_formatted}"
         }
-
-        # Add magic link if token is available
-        if token_info:
-            magic_link = self.communication_service.generate_magic_link(token_info.token)
-            context["magic_link"] = magic_link
-            context["has_magic_link"] = True
-        else:
-            context["has_magic_link"] = False
 
         try:
             self.communication_service.send_email(

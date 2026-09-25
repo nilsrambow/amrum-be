@@ -2,6 +2,7 @@ import datetime
 import secrets
 from enum import Enum
 
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, String, Float, Text, Enum as SQLEnum, CheckConstraint
 from sqlalchemy.orm import relationship, backref
 
@@ -77,6 +78,16 @@ class Booking(Base):
     meter_readings = relationship("MeterReading", back_populates="booking", uselist=False, cascade="all, delete-orphan")
     payments = relationship("Payment", back_populates="booking", cascade="all, delete-orphan")
     invoice_snapshot = relationship("InvoiceSnapshot", back_populates="booking", uselist=False, cascade="all, delete-orphan")
+
+    @hybrid_property
+    def kurkarten_data_missing(self):
+        """Kurkarten data counts as complete once a kurtaxe amount is entered.
+        0 is a valid amount, only an empty value means it is missing."""
+        return self.kurtaxe_amount is None
+
+    @kurkarten_data_missing.expression
+    def kurkarten_data_missing(cls):
+        return cls.kurtaxe_amount.is_(None)
 
 
 class BookingToken(Base):
