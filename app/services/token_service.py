@@ -5,7 +5,8 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.models import Booking, BookingToken
-from app.schemas import BookingTokenResponse, GuestBookingResponse
+from app.schemas import BookingTokenResponse, GuestBookingResponse, WastePickupResponse
+from app.services import waste_service
 
 
 class TokenService:
@@ -79,6 +80,8 @@ class TokenService:
             invoice_service = InvoiceService(self.db, None, None)
             invoice_details = invoice_service._invoice_data_from_snapshot(booking.invoice_snapshot)
         
+        waste_pickups = self._get_waste_pickups(booking)
+
         return GuestBookingResponse(
             id=booking.id,
             check_in=booking.check_in,
@@ -92,8 +95,35 @@ class TokenService:
             guest_email=booking.guest.email,
             meter_readings=booking.meter_readings,
             payments=booking.payments,
-            invoice_details=invoice_details
+            invoice_details=invoice_details,
+            waste_pickups=waste_pickups
         )
+
+    def _get_waste_pickups(self, booking: Booking) -> Optional[list]:
+        """Waste collections the guest has to put bins out for, None if unknown."""
+        # The window depends on whether the next guest arrives right away
+        next_booking = (
+            self.db.query(Booking)
+            .filter(
+                Booking.id != booking.id,
+                Booking.confirmed == True,
+                Booking.check_in >= booking.check_out,
+            )
+            .order_by(Booking.check_in)
+            .first()
+        )
+        pickups = waste_service.pickups_for_stay(
+            booking.check_in,
+            booking.check_out,
+            next_booking.check_in if next_booking else None,
+        )
+        if pickups is None:
+            return None
+        one_day = datetime.timedelta(days=1)
+        return [
+            WastePickupResponse(date=p.date, put_out_date=p.date - one_day, bin_type=p.bin_type)
+            for p in pickups
+        ]
 
     def revoke_token(self, booking_id: int) -> bool:
         """Revoke all tokens for a booking"""

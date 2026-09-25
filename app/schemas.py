@@ -1,5 +1,5 @@
 import datetime
-from typing import Optional, List
+from typing import Literal, Optional, List
 from enum import Enum
 
 from pydantic import BaseModel, EmailStr, Field
@@ -269,6 +269,14 @@ class BookingTokenResponse(BaseModel):
         from_attributes = True
 
 
+class WastePickupResponse(BaseModel):
+    """A waste collection the guest has to put the bin out for (evening before)"""
+
+    date: datetime.date
+    put_out_date: datetime.date
+    bin_type: Literal["restmuell", "papier", "plastik"]
+
+
 class GuestBookingResponse(BaseModel):
     """Response for guest access via magic link - limited booking info"""
 
@@ -293,6 +301,9 @@ class GuestBookingResponse(BaseModel):
 
     # Invoice details (calculated)
     invoice_details: Optional[dict] = None
+
+    # Waste collections during the stay, None if the waste calendar does not cover it
+    waste_pickups: Optional[List[WastePickupResponse]] = None
 
     class Config:
         from_attributes = True
