@@ -70,9 +70,6 @@ class TokenService:
         if not booking:
             return None
         
-        # Build guest name
-        guest_name = f"{booking.guest.first_name} {booking.guest.last_name}"
-        
         # Get invoice details from persisted snapshot if available
         invoice_details = None
         if booking.invoice_created and booking.invoice_snapshot:
@@ -91,8 +88,7 @@ class TokenService:
             kurtaxe_amount=booking.kurtaxe_amount,
             kurtaxe_notes=booking.kurtaxe_notes,
             created_at=booking.created_at,
-            guest_name=guest_name,
-            guest_email=booking.guest.email,
+            guest_first_name=booking.guest.first_name,
             meter_readings=booking.meter_readings,
             payments=booking.payments,
             invoice_details=invoice_details,

@@ -289,9 +289,8 @@ class GuestBookingResponse(BaseModel):
     kurtaxe_notes: Optional[str] = None
     created_at: datetime.datetime
 
-    # Guest info (limited)
-    guest_name: str
-    guest_email: str
+    # Guest info (minimal: the guest does not need to see his own email or surname)
+    guest_first_name: str
 
     # Meter readings (if any)
     meter_readings: Optional[MeterReadingResponse] = None

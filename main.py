@@ -12,6 +12,11 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
+
+# Keep guest access tokens out of the uvicorn access log
+from app.logging_filters import MaskGuestTokenFilter
+
+logging.getLogger("uvicorn.access").addFilter(MaskGuestTokenFilter())
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
