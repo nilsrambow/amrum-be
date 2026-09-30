@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.services.token_service import TokenService
 from app.services.meter_service import MeterService
-from app.schemas import GuestBookingResponse, MeterReadingCreate, MeterReadingResponse
+from app.schemas import GuestBookingResponse, MeterReadingBase, MeterReadingCreate, MeterReadingResponse
 
 def guest_privacy_headers(response: Response) -> None:
     """Guest pages are only meant for the holder of the secret link: keep them out of caches and search indexes."""
@@ -33,25 +33,25 @@ def get_booking_by_token(token: str, db: Session = Depends(get_db)):
 
 @router.post("/booking/{token}/readings", response_model=MeterReadingResponse)
 def add_meter_readings(
-    token: str, 
-    readings: MeterReadingCreate, 
+    token: str,
+    readings: MeterReadingBase,
     db: Session = Depends(get_db)
 ):
     """Add meter readings for a booking via magic link"""
     token_service = TokenService(db)
     booking = token_service.validate_token(token)
-    
+
     if not booking:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Invalid or expired token"
         )
-    
-    # Verify the booking ID matches the token
-    if readings.booking_id != booking.id:
+
+    meter_service = MeterService(db)
+    if meter_service.get_meter_reading(booking.id):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Booking ID mismatch"
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Meter readings have already been submitted for this booking"
         )
     
     # Add the readings
