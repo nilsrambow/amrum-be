@@ -2,17 +2,17 @@
 
 {% block content %}
 <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
-    <div style="text-align: center; margin-bottom: 30px;">
-        <h1 style="color: #2c3e50; margin-bottom: 10px;">RECHNUNG</h1>
-        <p style="color: #7f8c8d; font-size: 18px;">{{ invoice_id }}</p>
-    </div>
+    <p>LiebeR {{ guest_first_name }},</p>
+
+    <p>vielen Dank für Deinen Aufenthalt im Haus B! Hier kommt die Abrechnung dazu.</p>
 
     <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
-        <h2 style="color: #2c3e50; margin-top: 0;">Gastinformationen</h2>
+        <h2 style="color: #2c3e50; margin-top: 0;">Aufenthalt</h2>
         <p><strong>Name:</strong> {{ guest_name }}</p>
         <p><strong>Anreise:</strong> {{ check_in_date }}</p>
         <p><strong>Abreise:</strong> {{ check_out_date }}</p>
         <p><strong>Aufenthaltsdauer:</strong> {{ num_days }} Nächte</p>
+        <p style="margin-bottom: 0;"><strong>Rechnungsnummer:</strong> {{ invoice_id }}</p>
     </div>
 
     <div style="margin-bottom: 30px;">
@@ -25,38 +25,38 @@
                 </tr>
             </thead>
             <tbody>
-                {% if accommodation_cost != "€0.00" %}
+                {% if accommodation_cost != "0,00 €" %}
                 <tr>
                     <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">Unterkunft ({{ num_days }} Nächte)</td>
                     <td style="padding: 12px; text-align: right; border-bottom: 1px solid #ecf0f1;">{{ accommodation_cost }}</td>
                 </tr>
                 {% endif %}
 
-                {% if electricity_cost != "€0.00" %}
+                {% if electricity_cost != "0,00 €" %}
                 <tr>
                     <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">
                         Strom
                         {% if consumption and consumption.electricity_kwh %}
-                        ({{ "%.1f"|format(consumption.electricity_kwh) }} kWh)
+                        ({{ ("%.1f"|format(consumption.electricity_kwh))|replace(".", ",") }} kWh)
                         {% endif %}
                     </td>
                     <td style="padding: 12px; text-align: right; border-bottom: 1px solid #ecf0f1;">{{ electricity_cost }}</td>
                 </tr>
                 {% endif %}
 
-                {% if gas_cost != "€0.00" %}
+                {% if gas_cost != "0,00 €" %}
                 <tr>
                     <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">
                         Gas
                         {% if consumption and consumption.gas_kwh %}
-                        ({{ "%.1f"|format(consumption.gas_kwh) }} kWh)
+                        ({{ ("%.1f"|format(consumption.gas_kwh))|replace(".", ",") }} kWh)
                         {% endif %}
                     </td>
                     <td style="padding: 12px; text-align: right; border-bottom: 1px solid #ecf0f1;">{{ gas_cost }}</td>
                 </tr>
                 {% endif %}
 
-                {% if firewood_cost != "€0.00" %}
+                {% if firewood_cost != "0,00 €" %}
                 <tr>
                     <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">
                         Brennholz
@@ -68,7 +68,7 @@
                 </tr>
                 {% endif %}
 
-                {% if kurtaxe_cost != "€0.00" %}
+                {% if kurtaxe_cost != "0,00 €" %}
                 <tr>
                     <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">Kurtaxe</td>
                     <td style="padding: 12px; text-align: right; border-bottom: 1px solid #ecf0f1;">{{ kurtaxe_cost }}</td>
@@ -86,7 +86,7 @@
 
     <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; border-left: 4px solid #27ae60;">
         <h3 style="color: #27ae60; margin-top: 0;">Zahlungsinformationen</h3>
-        <p style="margin-bottom: 10px;">Wir bitten Sie, den offenen Betrag von <strong>{{ total_cost }}</strong> innerhalb von zwei Wochen zu überweisen. Vielen Dank!</p>
+        <p style="margin-bottom: 10px;">Bitte überweise den offenen Betrag von <strong>{{ total_cost }}</strong> innerhalb von zwei Wochen. Vielen Dank!</p>
         {% if payment_account_holder %}
         <p style="margin-bottom: 5px;"><strong>Kontoinhaber:</strong> {{ payment_account_holder }}</p>
         {% endif %}
@@ -96,14 +96,11 @@
         <p style="margin-bottom: 0;"><strong>Verwendungszweck:</strong> {{ invoice_id }}</p>
     </div>
 
-    <div style="margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 8px;">
-        <h3 style="color: #2c3e50; margin-top: 0;">Kontakt</h3>
-        <p style="margin-bottom: 5px;">Bei Fragen zu dieser Rechnung erreichen Sie uns unter:</p>
-        <p style="margin-bottom: 5px;"><strong>E-Mail:</strong> hausb@mailbox.org</p>
-    </div>
+    <p style="margin-top: 30px;">Bei Fragen zu dieser Abrechnung melde Dich einfach bei uns, zum Beispiel per Antwort auf diese Mail oder unter hausb@mailbox.org.</p>
 
-    <div style="margin-top: 30px; text-align: center; color: #7f8c8d; font-size: 14px;">
-        <p>Vielen Dank für Ihren Aufenthalt – wir freuen uns, Sie bald wieder bei uns begrüßen zu dürfen!</p>
-    </div>
+    <p>Wir freuen uns, Dich bald wieder bei uns begrüßen zu dürfen!</p>
+
+    <p>Viele Grüße<br>
+    Svenja, Gunnar, Jochen, Ingo und Nils vom Haus B</p>
 </div>
-{% endblock %} 
+{% endblock %}

@@ -1,19 +1,20 @@
 {% extends "base_email.html" %}
 
 {% block content %}
-<p>Hallo {{ guest_name }},</p>
+<p>LiebeR {{ guest_first_name }},</p>
 
 <p>wir hoffen, Du freust Dich auf Deinen bevorstehenden Aufenthalt vom {{ check_in_date }} bis zum {{ check_out_date }}.</p>
 
 <div class="highlight">
-
-    <p>LiebR {{ guest_name }},</p>
-    <p>für Deinen kommenden Besuch auf Amrum benötigen Du und alle Mitreisenden eine Kurkarte. Die dafür notwendigen Angaben müsstest Du bitte unter diesem Link</p>
-
+    <p>Für Deinen Besuch auf Amrum benötigen Du und alle Mitreisenden eine Kurkarte. Die dafür notwendigen Angaben trägst Du bitte über diesen Button ein:</p>
 
     <p><a href="{{ kurkarten_url }}" class="button">Kurkarten-Daten eintragen</a></p>
 </div>
- <p>Es wäre sonders toll, wenn Du mir danach eine kurze Rückmeldung gibst, und dazu sagst, wer Kind und wer Erwachsener ist.</p>
-    <p>Die Kurkarten bekommst Du dann etwa drei Tage vor Anreise per Mail zugeschickt.</p>
-    <p>Viele Grüße<br>Svenja, Gunnar, Jochen, Ingo und Nils vom Haus B</p>
-    {% endblock %} 
+
+<p>Das Formular unterscheidet leider nicht sauber zwischen Kindern und Erwachsenen. Es wäre deshalb toll, wenn Du uns danach kurz Rückmeldung gibst und uns sagst, wer Kind und wer Erwachsener ist.</p>
+
+<p>Die Kurkarten bekommst Du dann etwa drei Tage vor Anreise per Mail zugeschickt.</p>
+
+<p>Viele Grüße<br>
+Svenja, Gunnar, Jochen, Ingo und Nils vom Haus B</p>
+{% endblock %}

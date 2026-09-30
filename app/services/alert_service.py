@@ -89,12 +89,12 @@ class AlertService:
         actions = []
         action_id = 1
         
-        # 1. Check for missing kurkarten data (kurkarten email sent >5 days ago but kurtaxe_amount is empty)
+        # 1. Check for missing kurkarten data (kurkarten email sent >5 days ago but kurtaxe amount is missing)
         kurkarten_cutoff = datetime.datetime.utcnow() - datetime.timedelta(days=self.get_kurkarten_response_delay_days())
         missing_kurkarten = self.db.query(Booking).filter(
             Booking.kurkarten_email_sent == True,
             Booking.kurkarten_email_sent_date <= kurkarten_cutoff,
-            (Booking.kurtaxe_amount.is_(None) | (Booking.kurtaxe_amount == 0))
+            Booking.kurkarten_data_missing
         ).all()
         
         for booking in missing_kurkarten:

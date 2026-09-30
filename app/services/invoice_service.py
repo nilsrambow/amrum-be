@@ -12,6 +12,12 @@ from app.services.meter_service import MeterService
 from app.services.booking_status_service import BookingStatusService
 
 
+def format_currency(amount) -> str:
+    """Format an amount the German way: 1.234,56 €"""
+    formatted = f"{amount or 0:,.2f}"
+    return formatted.replace(",", "X").replace(".", ",").replace("X", ".") + " €"
+
+
 class InvoiceService:
     def __init__(self, db: Session, communication_service: CommunicationService, meter_service: MeterService, payment_config: dict = None):
         self.db = db
@@ -283,14 +289,11 @@ class InvoiceService:
         # Calculate invoice amounts for the email context
         invoice_data = self._calculate_invoice_amounts(booking)
         
-        # Format currency values
-        def format_currency(amount):
-            return f"€{amount:.2f}" if amount else "€0.00"
-        
         context = {
             "guest_name": f"{guest.first_name} {guest.last_name}",
-            "check_in_date": booking.check_in.strftime("%B %d, %Y"),
-            "check_out_date": booking.check_out.strftime("%B %d, %Y"),
+            "guest_first_name": guest.first_name,
+            "check_in_date": self.communication_service.format_german_date(booking.check_in),
+            "check_out_date": self.communication_service.format_german_date(booking.check_out),
             "invoice_id": invoice_id,
             "num_days": invoice_data['num_days'],
             "accommodation_cost": format_currency(invoice_data['accommodation_cost']),
@@ -394,14 +397,11 @@ class InvoiceService:
         """Send invoice email with details in body (no PDF attachment)."""
         guest = booking.guest
         
-        # Format currency values
-        def format_currency(amount):
-            return f"€{amount:.2f}" if amount else "€0.00"
-        
         context = {
             "guest_name": f"{guest.first_name} {guest.last_name}",
-            "check_in_date": booking.check_in.strftime("%B %d, %Y"),
-            "check_out_date": booking.check_out.strftime("%B %d, %Y"),
+            "guest_first_name": guest.first_name,
+            "check_in_date": self.communication_service.format_german_date(booking.check_in),
+            "check_out_date": self.communication_service.format_german_date(booking.check_out),
             "invoice_id": invoice_id,
             "num_days": invoice_data['num_days'],
             "accommodation_cost": format_currency(invoice_data['accommodation_cost']),
@@ -417,6 +417,7 @@ class InvoiceService:
         }
 
         subject = f"Haus B: Abrechnung vom {booking.check_in.strftime('%d. %m.')} bis {booking.check_out.strftime('%d. %m.')}"
+        context["subject"] = subject
 
         try:
             # Send to guest

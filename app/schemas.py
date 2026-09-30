@@ -30,6 +30,7 @@ class GuestResponse(GuestBase):
 
 class GuestUpdate(BaseModel):
     """Schema for partial guest updates - excludes system-managed fields"""
+
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     email: Optional[EmailStr] = None
@@ -112,6 +113,7 @@ class UnitPriceResponse(UnitPriceBase):
 # Specific Unit Price Schemas
 class ElectricityPriceCreate(UnitPriceBase):
     """Create electricity price in EUR per kWh"""
+
     price_per_unit: float = Field(..., gt=0, description="Price in EUR per kWh")
 
     class Config:
@@ -119,27 +121,29 @@ class ElectricityPriceCreate(UnitPriceBase):
             "example": {
                 "price_per_unit": 0.32,
                 "effective_from": "2024-01-01",
-                "description": "Electricity rate for 2024"
+                "description": "Electricity rate for 2024",
             }
         }
 
 
 class StayPriceCreate(UnitPriceBase):
     """Create accommodation price in EUR per night"""
+
     price_per_unit: float = Field(..., gt=0, description="Price in EUR per night")
 
     class Config:
         json_schema_extra = {
             "example": {
                 "price_per_unit": 85.0,
-                "effective_from": "2024-01-01", 
-                "description": "Nightly accommodation rate for 2024"
+                "effective_from": "2024-01-01",
+                "description": "Nightly accommodation rate for 2024",
             }
         }
 
 
 class GasPriceCreate(UnitPriceBase):
     """Create gas price in EUR per cubic meter"""
+
     price_per_unit: float = Field(..., gt=0, description="Price in EUR per cubic meter")
 
     class Config:
@@ -147,13 +151,14 @@ class GasPriceCreate(UnitPriceBase):
             "example": {
                 "price_per_unit": 1.25,
                 "effective_from": "2024-01-01",
-                "description": "Gas rate for 2024"
+                "description": "Gas rate for 2024",
             }
         }
 
 
 class FirewoodPriceCreate(UnitPriceBase):
     """Create firewood price in EUR per box"""
+
     price_per_unit: float = Field(..., gt=0, description="Price in EUR per box")
 
     class Config:
@@ -161,7 +166,7 @@ class FirewoodPriceCreate(UnitPriceBase):
             "example": {
                 "price_per_unit": 12.50,
                 "effective_from": "2024-01-01",
-                "description": "Firewood cost per box for 2024"
+                "description": "Firewood cost per box for 2024",
             }
         }
 
@@ -184,6 +189,7 @@ class BookingUpdate(BaseModel):
 
 class BookingPartialUpdate(BaseModel):
     """Schema for partial booking updates - excludes system-managed fields"""
+
     guest_id: Optional[int] = None
     check_in: Optional[datetime.date] = None
     check_out: Optional[datetime.date] = None
@@ -220,10 +226,10 @@ class BookingResponse(BookingBase):
     invoice_created: bool = False
     invoice_sent: bool = False
     paid: bool = False
-    
+
     # Booking status
     status: BookingStatus = BookingStatus.NEW
-    
+
     # New fields
     kurkarten_email_sent: bool = False
     kurkarten_email_sent_date: Optional[datetime.datetime] = None
@@ -233,17 +239,17 @@ class BookingResponse(BookingBase):
     kurtaxe_notes: Optional[str] = None
     invoice_id: Optional[str] = None
     invoice_sent_date: Optional[datetime.datetime] = None
-    
+
     created_at: datetime.datetime
     modified_at: datetime.datetime
-    
+
     # Relationships
     meter_readings: Optional[MeterReadingResponse] = None
     payments: Optional[List[PaymentResponse]] = None
-    
+
     # Invoice details (calculated)
     invoice_details: Optional[dict] = None
-    
+
     # Token information
     access_token: Optional[str] = None
     token_expires_at: Optional[datetime.datetime] = None
@@ -265,6 +271,7 @@ class BookingTokenResponse(BaseModel):
 
 class GuestBookingResponse(BaseModel):
     """Response for guest access via magic link - limited booking info"""
+
     id: int
     check_in: datetime.date
     check_out: datetime.date
@@ -273,17 +280,17 @@ class GuestBookingResponse(BaseModel):
     kurtaxe_amount: Optional[float] = None
     kurtaxe_notes: Optional[str] = None
     created_at: datetime.datetime
-    
+
     # Guest info (limited)
     guest_name: str
     guest_email: str
-    
+
     # Meter readings (if any)
     meter_readings: Optional[MeterReadingResponse] = None
-    
+
     # Payments (if any)
     payments: Optional[List[PaymentResponse]] = None
-    
+
     # Invoice details (calculated)
     invoice_details: Optional[dict] = None
 
@@ -332,13 +339,13 @@ class DashboardStatsResponse(BaseModel):
     total_invoice_amount: float
     total_occupied_nights: int
     year: int
-    
+
     class Config:
         json_schema_extra = {
             "example": {
                 "total_bookings": 45,
                 "total_invoice_amount": 12500.50,
                 "total_occupied_nights": 320,
-                "year": 2024
+                "year": 2024,
             }
         }
