@@ -12,6 +12,8 @@ from app.config.config import get_kurkarten_config
 
 logger = logging.getLogger(__name__)
 
+MIN_HASH_LENGTH = 32
+
 
 def extract_url_group_from_html(html: str, pattern: str) -> str:
     """
@@ -274,7 +276,7 @@ class KurkartenService:
 
                 # Step 3: extract URL from HTML
                 html_string = form_response.text
-                match_string = r"(https://selfcheck-in-meldeschein\.avs\.de/\?hash=[a-f0-9]+)"
+                match_string = r"(https://selfcheck-in-meldeschein\.avs\.de/\?hash=[A-Za-z0-9]+)"
                 logger.info("Kurkarten: searching for URL pattern in HTML (%d chars)", len(html_string))
 
                 try:
@@ -288,6 +290,13 @@ class KurkartenService:
                         html_string[:2000],
                     )
                     raise
+
+                # Guard against truncated links (e.g. a too-narrow regex); real hashes are 64 chars
+                hash_value = kurkarten_url.split("hash=", 1)[1]
+                if len(hash_value) < MIN_HASH_LENGTH:
+                    raise ValueError(
+                        f"Extracted hash is suspiciously short ({len(hash_value)} chars): {kurkarten_url}"
+                    )
 
                 logger.info("Kurkarten: successfully extracted URL: %s", kurkarten_url)
                 return kurkarten_url
