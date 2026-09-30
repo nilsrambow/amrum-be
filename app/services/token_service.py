@@ -5,7 +5,8 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.models import Booking, BookingToken
-from app.schemas import BookingTokenResponse, GuestBookingResponse
+from app.schemas import BookingTokenResponse, GuestBookingResponse, WastePickupResponse
+from app.services import waste_service
 
 
 class TokenService:
@@ -69,9 +70,6 @@ class TokenService:
         if not booking:
             return None
         
-        # Build guest name
-        guest_name = f"{booking.guest.first_name} {booking.guest.last_name}"
-        
         # Get invoice details from persisted snapshot if available
         invoice_details = None
         if booking.invoice_created and booking.invoice_snapshot:
@@ -79,6 +77,8 @@ class TokenService:
             invoice_service = InvoiceService(self.db, None, None)
             invoice_details = invoice_service._invoice_data_from_snapshot(booking.invoice_snapshot)
         
+        waste_pickups = self._get_waste_pickups(booking)
+
         return GuestBookingResponse(
             id=booking.id,
             check_in=booking.check_in,
@@ -88,12 +88,38 @@ class TokenService:
             kurtaxe_amount=booking.kurtaxe_amount,
             kurtaxe_notes=booking.kurtaxe_notes,
             created_at=booking.created_at,
-            guest_name=guest_name,
-            guest_email=booking.guest.email,
+            guest_first_name=booking.guest.first_name,
             meter_readings=booking.meter_readings,
             payments=booking.payments,
-            invoice_details=invoice_details
+            invoice_details=invoice_details,
+            waste_pickups=waste_pickups
         )
+
+    def _get_waste_pickups(self, booking: Booking) -> Optional[list]:
+        """Waste collections the guest has to put bins out for, None if unknown."""
+        # The window depends on whether the next guest arrives right away
+        next_booking = (
+            self.db.query(Booking)
+            .filter(
+                Booking.id != booking.id,
+                Booking.confirmed == True,
+                Booking.check_in >= booking.check_out,
+            )
+            .order_by(Booking.check_in)
+            .first()
+        )
+        pickups = waste_service.pickups_for_stay(
+            booking.check_in,
+            booking.check_out,
+            next_booking.check_in if next_booking else None,
+        )
+        if pickups is None:
+            return None
+        one_day = datetime.timedelta(days=1)
+        return [
+            WastePickupResponse(date=p.date, put_out_date=p.date - one_day, bin_type=p.bin_type)
+            for p in pickups
+        ]
 
     def revoke_token(self, booking_id: int) -> bool:
         """Revoke all tokens for a booking"""

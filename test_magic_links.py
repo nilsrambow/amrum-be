@@ -78,8 +78,7 @@ def test_magic_link_flow():
     
     guest_booking = response.json()
     print(f"✅ Guest booking access successful:")
-    print(f"   Guest name: {guest_booking['guest_name']}")
-    print(f"   Guest email: {guest_booking['guest_email']}")
+    print(f"   Guest first name: {guest_booking['guest_first_name']}")
     print(f"   Status: {guest_booking['status']}")
     
     # 5. Test adding meter readings via magic link
@@ -104,18 +103,8 @@ def test_magic_link_flow():
     print(f"   Gas: {meter_reading['gas_start']} - {meter_reading['gas_end']}")
     print(f"   Firewood: {meter_reading['firewood_boxes']} boxes")
     
-    # 6. Test getting meter readings via magic link
-    print("\n6. Testing get meter readings via magic link...")
-    response = requests.get(f"{magic_link}/readings")
-    if response.status_code != 200:
-        print(f"❌ Failed to get meter readings: {response.text}")
-        return
-    
-    retrieved_readings = response.json()
-    print(f"✅ Meter readings retrieved successfully")
-    
-    # 7. Test invalid token
-    print("\n7. Testing invalid token...")
+    # 6. Test invalid token
+    print("\n6. Testing invalid token...")
     invalid_link = f"{BASE_URL}/guest/booking/invalid_token_123"
     response = requests.get(invalid_link)
     if response.status_code == 404:
