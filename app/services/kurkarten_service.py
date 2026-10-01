@@ -167,6 +167,7 @@ class KurkartenService:
             "check_in_date": self.communication_service.format_german_date(booking.check_in),
             "check_out_date": self.communication_service.format_german_date(booking.check_out),
             "magic_link": self.communication_service.generate_magic_link(token_info.token),
+            "has_magic_link": True,
             "subject": f"Haus B: Letzte Infos vor Deiner Anreise am {arrival_date_formatted}"
         }
 
